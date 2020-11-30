@@ -30,6 +30,7 @@ set(LINKED_LIBRARIES
   ${CURSES_LIBRARIES}
   assimp
   glm
+  libcgeom
 )
 
 add_library(librender STATIC 

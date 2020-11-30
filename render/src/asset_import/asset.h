@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 #include <variant>
 #include <iostream>
+#include <glm/gtx/string_cast.hpp>
 
 namespace render{
 namespace asset{
@@ -20,6 +21,17 @@ struct Face{
     return face[indx];
   }
 };
+
+
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const Face<T>& face){
+  os << "[";
+  for(const auto& v : face.face){
+    os << glm::to_string(v) << ", ";
+  }
+  os << "]";
+  return os;
+}
 
 struct Layer{
   std::variant<
