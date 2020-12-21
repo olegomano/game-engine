@@ -1,22 +1,27 @@
 #include "asset.h"
 
 
-
-std::ostream& render::asset::operator<<(std::ostream& out, const render::asset::SceneAsset& a){
-  for (const Mesh& m : a.m_meshes){
-    out << m << std::endl;
-  } 
-  return out;
-}
-
 std::ostream& render::asset::operator<<(std::ostream& out, const render::asset::Mesh& a){
-  for( auto const& [ type,layer ] : a.m_layers ){
-    out << type << ": ";
-    std::visit([&](const auto& l){
-      out << l.size();
-    },layer.data);
-    out << std::endl;
+  for(int i = render::asset::Mesh::LayerType::START + 1; i < render::asset::Mesh::LayerType::END;i++ ){
+    if(a.hasLayer( (render::asset::Mesh::LayerType) i)){
+      out << i << ": [";
+      a.layer((render::asset::Mesh::LayerType)i,[&](const auto& layer){
+        for(const auto& face : layer){ 
+          out << "{" << glm::to_string(face[0]) << "," << glm::to_string(face[1]) << "," << glm::to_string(face[2]) << "}";
+        }
+      });
+      out << "]" << std::endl;
+    }
   }
   return out;
-  //std::unordered_map<LayerType,Layer> m_layers;  
 }
+
+
+std::ostream& render::asset::operator<<(std::ostream& out, const render::asset::SceneAsset& a){
+  for(const auto& mesh : a.meshes()){
+    out << *mesh << std::endl;
+  }
+  return out;
+}
+
+

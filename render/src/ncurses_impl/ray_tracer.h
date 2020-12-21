@@ -30,11 +30,13 @@ public:
   uint32_t height() const {
     return m_height;
   }
-
+  
+  /**
+   *  _T_MeshList is assumed to be an iteratable of a tuple that has a Mesh* and a glm::mat4 
+   */
   template<typename _T_MeshList>
-  void render(const _T_MeshList& mesh){
+  void render(const _T_MeshList& meshList){
     memset(&m_buffer[0], 0xffffffff,m_buffer.size() * 4);
-
     float pixelWidth = m_sensorWidth  / (float)m_width;
     float pixelHeight = m_sensorHeight / (float)m_height;
     const glm::vec3 cameraOrigin = {0,0,-1 * m_focalLength};
@@ -47,21 +49,28 @@ public:
         uint32_t color = castRay(
             cameraOrigin, 
             glm::normalize(glm::vec3(px,py,0) - cameraOrigin),
-            mesh); 
+            meshList); 
         m_buffer[y*m_width + x] = color;
       }
     }
   }
 
 private:
+
+
+  
   template<typename _T_MeshList>
   uint32_t castRay(const glm::vec3& origin,const glm::vec3& ray, const _T_MeshList& meshList) const {
     cgeom::intersect::Result result = {{},{},1000};
     bool hasCollision = false;
     
     //std::cout << glm::to_string(ray) << std::endl;
-    for(const ::render::asset::Mesh& mesh : meshList){
-      for(const auto& face : mesh.faces<::render::asset::Mesh::vertex>()){
+    for(const auto& meshTuple : meshList){
+      //TODO: convert this to sfinae so we can handle both ref and pointer
+      const render::asset::Mesh* const mesh = std::get<const render::asset::Mesh* const>(meshTuple);
+      
+      const glm::mat4& transform = std::get<glm::mat4>(meshTuple);
+      for(const auto& face : mesh->layer<::render::asset::Mesh::vertex>()){
         cgeom::intersect::Result r = cgeom::intersect::ray_tris(origin,ray,face);
         if(ray[0] == 0 && ray[1] == 0){
           std::cout <<glm::to_string(origin) << " " << glm::to_string(ray) << std::endl;

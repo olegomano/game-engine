@@ -1,6 +1,8 @@
 #include "gtest/gtest.h"
+#include <glm/gtx/transform.hpp>
 #include <collections/stable_vector.h>
 #include <collections/scene_graph.h>
+#include <glm/gtx/string_cast.hpp>
 
 TEST(stable_vector, insert){
   std::vector<uint32_t> vec;
@@ -24,6 +26,19 @@ TEST(stable_vector, assert_full){
   ASSERT_DEATH(svec.push_back(1),".*");
 }
 
+TEST(stable_vector,iterator){
+  collections::stable_vector::StableVector<uint32_t> svec;
+  for(int i =0 ; i < 1024*4; i++){
+    svec.push_back(i);  
+  } 
+  ASSERT_EQ(svec.size(), 1024*4);
+  
+  uint32_t count = 0;
+  for(const uint32_t& i : svec){
+    ASSERT_EQ(count++,i);
+  }
+}
+
 
 TEST(scene_graph, access){
   collections::scene_graph::Scene<int> graph;
@@ -37,6 +52,23 @@ TEST(scene_graph, access){
 }
 
 
-TEST(scene_graph, global_transform){
+TEST(scene_graph, update){
+  collections::scene_graph::Scene<int> graph;
+  auto c1 = graph.createNode(0);
+  auto lastNode = c1;
+  int count = 0;
+  while(count < 100){
+    graph[lastNode].transform() = glm::translate(glm::mat4(1), glm::vec3(1.0f, 0.0f, 0.0f)); 
+    ++count;
+    lastNode = graph.createNode(count,lastNode);
+  } 
+  graph[lastNode].transform() = glm::translate(glm::mat4(1), glm::vec3(1.0f, 0.0f, 0.0f)); 
 
+  graph.update();
+  ASSERT_EQ(graph.globals().size(), count + 2);
+  count = 0;
+  for(const auto& globalTransform : graph.globals()){
+    ASSERT_NEAR(count++,std::get<glm::mat4>(globalTransform)[3][0],0.000001f);
+  }  
+  graph.update();
 }

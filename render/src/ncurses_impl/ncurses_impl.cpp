@@ -42,8 +42,7 @@ void NCursesRender::render(){
   //erase();
   ++m_count;
   raytrace::RayTracer tracer(32,32); 
-  tracer.render(m_assets[0]->meshes());
-
+  
   for(int x  = 0; x < tracer.width(); x++){
     for(int y = 0; y < tracer.height(); y++){
       if(tracer.buffer()[y*tracer.width() + x] == 0){
@@ -62,7 +61,6 @@ void NCursesRender::render(){
 }
 
 NCursesRender::r_handle NCursesRender::addAsset(const ::render::asset::SceneAsset& asset){
-  m_assets.push_back(&asset);
   return -1;
 }
 

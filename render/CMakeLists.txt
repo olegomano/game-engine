@@ -8,7 +8,6 @@ set(LIB_SRC
   src/gl_impl/gl_impl.cpp  
   src/ncurses_impl/ncurses_impl.cpp 
   src/ncurses_impl/rasterizer.cpp
-  src/ncurses_impl/ray_tracer.cpp
   src/asset_import/import.cpp
   src/asset_import/asset.cpp
 )
@@ -31,6 +30,7 @@ set(LINKED_LIBRARIES
   assimp
   glm
   libcgeom
+  collections
 )
 
 add_library(librender STATIC 
