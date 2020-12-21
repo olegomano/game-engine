@@ -24,20 +24,20 @@ void render::RenderContext::create(render::RenderContext::Type t){
 }
 
 void render::RenderContext::createPrimitive(primitive::Value v){
-  
+
 }
 
-void render::RenderContext::createAsset(const std::string& v){
+::render::IAsset render::RenderContext::createAsset(const std::string& v){
   using namespace render::asset;
   std::cout << "RenderContext::createAsset " << v << std::endl; 
   SceneAsset* asset = m_assetManager.load<SceneAsset>(v);
   if(asset == nullptr){
     std::cout << "RenderContext::createAsset failed to create" << v << std::endl; 
   }else{
-    std::cout << "RenderContext::createAsset " <<  std::endl << *asset << std::endl; 
-    m_impl->addAsset(*asset);
+    //std::cout << "RenderContext::createAsset " <<  std::endl << *asset << std::endl; 
+    return m_impl->addAsset(*asset);
   }
-
+  return {};
 }
 
 void render::RenderContext::addInputListener(const IInputManager::InputHandler& handler){

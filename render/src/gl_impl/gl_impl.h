@@ -1,13 +1,13 @@
 #pragma once
 #include <render/render.h>
-
+#include <render_impl.h>
 
 namespace render{
 namespace gl{
 
 class GLRender : public IRenderImpl{
 public:
-  r_handle addAsset(const render::asset::SceneAsset& asset){ return -1;};
+  ::render::IAsset addAsset(render::asset::SceneAsset& asset){return {};};
   void render(){}
 };
 

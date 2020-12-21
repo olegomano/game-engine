@@ -1,5 +1,8 @@
 #include "ncurses_impl.h"
 #include "ray_tracer.h"
+#include <glm/gtx/string_cast.hpp>
+#include <collections/debug_print.h>
+#include <sstream>
 
 using namespace render::ncurses;
 
@@ -16,7 +19,9 @@ void InputManager::handleKeyboard(uint32_t t){
 
 void InputManager::pollInput(){
   uint32_t c = getch();
-  handleKeyboard(c);
+  if(c != -1){
+    handleKeyboard(c);
+  }
 }
 
 NCursesRender::NCursesRender(){
@@ -27,43 +32,63 @@ NCursesRender::NCursesRender(){
   clear();
 }
 
-
-uint8_t clampColor(float min, float max, float value){
-  float d = (value - min) / (max - min);
-  return (uint8_t)255 * d;
-}
-
-template<typename T>
-void imageToFile(T&& image, int w, int h){
-  
-}
-
 void NCursesRender::render(){
-  //erase();
+  erase();
   ++m_count;
-  raytrace::RayTracer tracer(32,32); 
-  tracer.render(m_assets[0]->meshes());
+  m_scene.update();
+  
+  auto& globals = m_scene.globals();
+  //debug::print::print_debug("Render List Size: ",globals.size());
 
-  for(int x  = 0; x < tracer.width(); x++){
-    for(int y = 0; y < tracer.height(); y++){
-      if(tracer.buffer()[y*tracer.width() + x] == 0){
-        mvaddch(y,x,'*');
-      }else{
-        mvaddch(y,x,'_');
-      }
+  m_tracer.render(globals);
+  for(int x  = 0; x < m_tracer.width(); x++){
+    for(int y = 0; y < m_tracer.height(); y++){
+      std::stringstream oss;
+      oss << m_tracer.buffer()[y*m_tracer.width() + x];
+      mvaddch(y,x,oss.str()[0]);
     }
   }
-
-  for(uint32_t pixel : tracer.buffer()){
-    std::cout << pixel << std::endl;
-  }
+  //m_tracer.displayBuffer(debug::print::printFile);
 
   refresh();
 }
 
-NCursesRender::r_handle NCursesRender::addAsset(const ::render::asset::SceneAsset& asset){
-  m_assets.push_back(&asset);
-  return -1;
+void NCursesRender::displayScene(std::ostream& out){
+  m_scene.traverse([&](const auto& node,int depth) {
+    for(int i = 0; i < depth; i++){
+      out << " ";
+    }
+    out << "Transform: " << glm::to_string(node.transform()) << std::endl;
+    
+    if(node.hasPayload()){  
+      for(int i = 0; i < depth; i++){
+        out << " ";
+      }
+      out << "Name: " << node.data()->name() << std::endl;
+      for(int i = 0; i < depth; i++){
+        out << " ";
+      }
+      out << "Layers:[";
+      for(int i = render::asset::Mesh::LayerType::START + 1; i < render::asset::Mesh::LayerType::END; i++){
+        if(node.data()->hasLayer((render::asset::Mesh::LayerType)i)){
+          out << i << ",";
+        }
+      }
+      out << "]";
+      out << std::endl << std::endl;
+    }
+    return depth++; 
+  },0);
+}
+
+::render::IAsset NCursesRender::addAsset(::render::asset::SceneAsset& asset){
+  auto scene = asset.scene();
+  collections::scene_graph::node_ref ref = m_scene.append(scene);  
+  displayScene(debug::print::stream); 
+  
+  ::render::IAsset result;
+  result.create(Asset(m_scene,ref));
+  return result;
 }
 
 

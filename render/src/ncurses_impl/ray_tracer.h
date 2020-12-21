@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <asset_import/asset.h>
 #include <cgeom/intersect.h>
+#include <collections/debug_print.h>
 
 namespace render{
 namespace ncurses{
@@ -30,11 +31,13 @@ public:
   uint32_t height() const {
     return m_height;
   }
-
+  
+  /**
+   *  _T_MeshList is assumed to be an iteratable of a tuple that has a Mesh* and a glm::mat4 
+   */
   template<typename _T_MeshList>
-  void render(const _T_MeshList& mesh){
+  void render(const _T_MeshList& meshList){
     memset(&m_buffer[0], 0xffffffff,m_buffer.size() * 4);
-
     float pixelWidth = m_sensorWidth  / (float)m_width;
     float pixelHeight = m_sensorHeight / (float)m_height;
     const glm::vec3 cameraOrigin = {0,0,-1 * m_focalLength};
@@ -47,9 +50,19 @@ public:
         uint32_t color = castRay(
             cameraOrigin, 
             glm::normalize(glm::vec3(px,py,0) - cameraOrigin),
-            mesh); 
+            meshList); 
         m_buffer[y*m_width + x] = color;
       }
+    }
+  }
+
+  template<typename _T_Out>
+  void displayBuffer(_T_Out&& out) const {
+    for(int y = 0; y < m_height; y++){
+      for(int x = 0; x < m_width; x++){
+        out << m_buffer[y * m_width + x] << " ";
+      }
+      out << std::endl;
     }
   }
 
@@ -60,13 +73,22 @@ private:
     bool hasCollision = false;
     
     //std::cout << glm::to_string(ray) << std::endl;
-    for(const ::render::asset::Mesh& mesh : meshList){
-      for(const auto& face : mesh.faces<::render::asset::Mesh::vertex>()){
-        cgeom::intersect::Result r = cgeom::intersect::ray_tris(origin,ray,face);
-        if(ray[0] == 0 && ray[1] == 0){
-          std::cout <<glm::to_string(origin) << " " << glm::to_string(ray) << std::endl;
-          std::cout << r << std::endl;
-        }
+    for(const auto& meshTuple : meshList){
+      //TODO: convert this to sfinae so we can handle both ref and pointer
+      const render::asset::Mesh* const mesh = std::get<const render::asset::Mesh* const>(meshTuple);
+      const glm::mat4& transform = std::get<glm::mat4>(meshTuple);
+      
+      if(!mesh->hasLayer<::render::asset::Mesh::vertex>()){
+        continue;
+      }
+      //debug::print::print_debug("Casting Ray Against: ", mesh->layer<::render::asset::Mesh::vertex>().size(), "");
+      for(const auto& face : mesh->layer<::render::asset::Mesh::vertex>()){
+        render::asset::Face<glm::vec4> globalFace;
+        globalFace[0] = transform * face[0];
+        globalFace[1] = transform * face[1];
+        globalFace[2] = transform * face[2];
+
+        cgeom::intersect::Result r = cgeom::intersect::ray_tris(origin,ray,globalFace);       
         if(r.distance < result.distance && r.distance > 0 && r.location.z >= 0){
           result = r;
           hasCollision = true;
