@@ -78,17 +78,17 @@ private:
       const render::asset::Mesh* const mesh = std::get<const render::asset::Mesh* const>(meshTuple);
       const glm::mat4& transform = std::get<glm::mat4>(meshTuple);
       
-      if(!mesh->hasLayer<::render::asset::Mesh::vertex>()){
+      if(!mesh->hasLayer<::render::asset::Mesh::VertexLayer::vertex>()){
         continue;
       }
       //debug::print::print_debug("Casting Ray Against: ", mesh->layer<::render::asset::Mesh::vertex>().size(), "");
-      for(const auto& face : mesh->layer<::render::asset::Mesh::vertex>()){
+      for(const auto& face : mesh->layer<::render::asset::Mesh::VertexLayer::vertex>()){
         render::asset::Face<glm::vec4> globalFace;
         globalFace[0] = transform * face[0];
         globalFace[1] = transform * face[1];
         globalFace[2] = transform * face[2];
 
-        cgeom::intersect::Result r = cgeom::intersect::ray_tris(origin,ray,globalFace);       
+        const cgeom::intersect::Result& r = cgeom::intersect::ray_tris(origin,ray,globalFace);       
         if(r.distance < result.distance && r.distance > 0 && r.location.z >= 0){
           result = r;
           hasCollision = true;

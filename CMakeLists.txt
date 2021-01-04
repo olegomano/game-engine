@@ -5,11 +5,10 @@ option(BUILD_TESTS "Build Tests" ON)
 option(OPTIMIZATIONS "Are optimizations enabled" ON)
 
 if(OPTIMIZATIONS)
-set(COMPILE_FLAGS "-std=c++17" "-fno-exceptions" "-Wall" "-O3" "-fno-omit-frame-pointer" "-flto" "-fno-rtti" "-Werror=return-type" )
+set(COMPILE_FLAGS "-std=c++17" "-fno-exceptions" "-Wall" "-O3" "-fno-omit-frame-pointer" "-flto" "-fno-rtti" "-Werror=return-type")
 else()
 set(COMPILE_FLAGS "-std=c++17" "-fno-exceptions" "-Wall" "-Werror=return-type" )
 endif()
-
 if(BUILD_TESTS)
     enable_testing()
     include(GoogleTest)

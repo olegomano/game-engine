@@ -12,11 +12,11 @@ Asset::Asset(typename NCursesRender::SceneGraph& graph,
 
 Asset::~Asset(){}
 
-const glm::mat4& Asset::transform() const {
+const cgeom::transform::Transform& Asset::transform() const {
   return m_graph[m_node].transform();
 }
 
-glm::mat4& Asset::transform() {
+cgeom::transform::Transform& Asset::transform() {
   return m_graph[m_node].transform();
 }
 

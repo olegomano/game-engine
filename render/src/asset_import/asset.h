@@ -11,6 +11,7 @@
 #include <iostream>
 #include <glm/gtx/string_cast.hpp>
 #include <collections/scene_graph.h>
+#include <cgeom/transform.h>
 
 namespace render{
 namespace asset{
@@ -28,7 +29,6 @@ struct Face{
     assert(indx < 3);
     return face[indx];
   }
-
 };
 
 template<typename T>
@@ -41,57 +41,120 @@ std::ostream& operator<<(std::ostream& os, const Face<T>& face){
   return os;
 }
 
+class Texture{
+public:
+  Texture(const std::string& path){
+    
+  }
+
+  const std::vector<uint8_t>& pixels() const {
+    return m_pixels;
+  }
+
+  const uint32_t width() const {
+    return m_width;
+  }
+
+  const uint32_t height() const {
+    return m_height;
+  }
+
+private:
+  uint32_t m_width  = 0;
+  uint32_t m_height = 0;
+  std::vector<uint8_t> m_pixels;
+};
+
 class Mesh{  
 public:    
   friend std::ostream& operator<<(std::ostream& os, const Mesh& m);
-  enum LayerType{
-    START = -1,
-    vertex,
-    uv_1,
-    uv_2,
-    normal,
-    bone,
-    END
-  };
   
-  template<typename T, LayerType _T_Type>
-  struct Layer{
-    static constexpr LayerType Type = _T_Type;
-    std::optional<std::vector<Face<T>>> faces;
+  struct VertexLayer{
+    enum id{
+      START = -1,
+      vertex,
+      uv_1,
+      uv_2,
+      normal,
+      bone,
+      END
+    };
+    
+    template<typename T, uint32_t _T_Type>
+    struct type{
+      static constexpr id _id = (id)_T_Type;
+      std::optional<std::vector<Face<T>>> faces;
+    };
+    
+    inline static std::string layer_name(id layer){
+      switch(layer){
+      case vertex:
+        return "vertex";
+      case uv_1:
+        return "uv_1";
+      default:
+        return "unknown";
+      }
+    };
+
+    template<typename T>
+    inline static void for_each(T&& f){
+      for(uint32_t i = START + 1; i < END; i++){
+        f((id)i);
+      }
+    }
   };
 
-  typedef std::tuple<
-    Layer<glm::vec4,vertex>,
-    Layer<glm::vec2,uv_1>,
-    Layer<glm::vec2,uv_2>,
-    Layer<glm::vec4,normal>,
-    Layer<glm::vec4,bone>
-  >LayerGroup;
   
-  template<LayerType T, typename Vector>
+  struct TextureLayer{
+    enum id{
+      START = -1,
+      diffuse,
+      normal,
+      displace,
+      END
+    };
+    
+    template<uint32_t _T_Type>
+    struct type {
+      static constexpr id _id = (id)_T_Type;
+      std::optional<Texture> texture;
+    };
+  }; 
+
+ 
+  typedef std::tuple<
+    VertexLayer::type<glm::vec4,VertexLayer::vertex>,
+    VertexLayer::type<glm::vec2,VertexLayer::uv_1>,
+    VertexLayer::type<glm::vec2,VertexLayer::uv_2>,
+    VertexLayer::type<glm::vec4,VertexLayer::normal>,
+    VertexLayer::type<glm::vec4,VertexLayer::bone>
+  >VertexGroup;
+  
+  template<typename VertexLayer::id T, typename Vector>
   void addLayer(Vector&& vector){
     std::get<T>(m_layers).faces = std::move(vector);
   }  
   
-  bool hasLayer(const LayerType& t) const {
+  bool hasLayer(const typename VertexLayer::id& t) const {
     return std::apply([&](auto&... layer){    
-      return ( ( (layer.Type == t) && layer.faces.has_value()) || ... );    
+      return ( ( (layer._id == t) && layer.faces.has_value()) || ... );    
     },m_layers);
   }
 
-  template<LayerType T>
+  template<typename VertexLayer::id T>
   bool hasLayer() const {
     return std::get<T>(m_layers).faces.has_value();
   }
   
-  template<LayerType T>
+  template<typename VertexLayer::id T>
   const auto& layer() const {
     assert(hasLayer<T>());
     return std::get<T>(m_layers).faces.value();
   }
 
   template<typename Callback>
-  void layer(const LayerType& t, Callback&& callback) const {
+  void layer(const typename VertexLayer::id& t, Callback&& callback) const {
     std::apply([&](auto&... layer){
       std::make_tuple( dynamicApplyLayer(t,layer,callback) ... );
     },m_layers);
@@ -104,15 +167,15 @@ public:
 private:
   
   template<typename Callback, typename Layer>
-  bool dynamicApplyLayer(const LayerType& type, const Layer& layer, Callback&& callback) const {
-    if(type == layer.Type){
+  bool dynamicApplyLayer(const typename VertexLayer::id& type, const Layer& layer, Callback&& callback) const {
+    if(type == layer._id){
       callback(layer.faces.value());
       return true;
     }
     return false;
   }
   
-  LayerGroup m_layers;
+  VertexGroup m_layers;
   std::string m_name = "";
   
 };
@@ -167,7 +230,7 @@ private:
         } 
         vertices.push_back(f);
       }
-      m.addLayer<Mesh::vertex>(std::move(vertices));
+      m.addLayer<Mesh::VertexLayer::vertex>(std::move(vertices));
       auto meshNode = m_meshes.createNode(std::move(m),currentNode);
     }
 

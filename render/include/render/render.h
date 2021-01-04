@@ -4,6 +4,7 @@
 #include <string>
 #include <functional>
 #include <vector>
+#include <cgeom/transform.h>
 #include "import.h"
 
 
@@ -19,10 +20,11 @@ enum Value{
 
 class IAssetFunctions{
 public:
-  virtual glm::mat4& transform() = 0;
-  virtual const glm::mat4& transform() const = 0;
+  virtual cgeom::transform::Transform& transform() = 0;
+  virtual const cgeom::transform::Transform& transform() const = 0;
   virtual ~IAssetFunctions(){};
 };
+
 
 /**
  *  Represents an asset inside the rendering pipeline
@@ -33,18 +35,18 @@ class IAsset{
 public:
   template<typename T>
   void create(T&& obj){
-    static_assert(sizeof(T) < 1024,"Object too large");
+    static_assert(sizeof(T) < 32,"Object too large");
     m_null = false;
     T* lhs = (T*)m_impl;
     new(lhs) T(obj);
   }
 
-  glm::mat4& transform(){
+  cgeom::transform::Transform& transform(){
     IAssetFunctions* f = (IAssetFunctions*)m_impl;
     return f->transform();
   }
 
-  const glm::mat4& transform() const{
+  const cgeom::transform::Transform& transform() const{
     IAssetFunctions* f = (IAssetFunctions*)m_impl;
     return f->transform(); 
   }
@@ -60,7 +62,7 @@ public:
     }
   }
 private:
-  uint8_t m_impl[1024];
+  uint8_t m_impl[32];
   bool    m_null = true;
 };
 

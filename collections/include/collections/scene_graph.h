@@ -1,6 +1,7 @@
 #pragma once
 #include <optional>
 #include <glm/glm.hpp>
+#include <cgeom/transform.h>
 #include "stable_vector.h"
 
 namespace collections{
@@ -57,11 +58,11 @@ public:
     return *m_payload;
   }
   
-  glm::mat4& transform(){
+  cgeom::transform::Transform& transform(){
     return m_transform;
   }
 
-  const glm::mat4& transform() const {
+  const cgeom::transform::Transform& transform() const {
     return m_transform;
   }
 
@@ -78,7 +79,7 @@ public:
   }
 
 private:
-  glm::mat4                             m_transform = glm::mat4(1);
+  cgeom::transform::Transform           m_transform;
   std::vector<Node<T>*>                 m_children;
   Node<T>*                              m_parent;
   std::optional<T>                      m_payload;
@@ -100,7 +101,7 @@ public:
   }
   
   template<typename Tuple> 
-  static glm::mat4& get_transform(Tuple&& tuple){
+  static const auto& get_transform(Tuple&& tuple){
     return std::get<glm::mat4>(tuple);
   }
 
@@ -113,12 +114,15 @@ public:
   void update(){
     m_globalPositions.clear();
     traverseScene((m_nodes[0]),[&](Node<T>& node, const glm::mat4& parent) mutable {
-      glm::mat4 globalPosition =  parent*node.transform();
+      glm::mat4 globalPosition =  parent*node.transform().transform();
       if(node.hasPayload()){
-        m_globalPositions.push_back(std::make_tuple(node.data(),globalPosition));  
+        m_globalPositions.push_back(std::make_tuple(
+              node.data(),
+              globalPosition)
+            );  
       }
       return globalPosition;  
-    },glm::mat4(1)); 
+    },glm::mat4(1.0f)); 
   }
 
   Node<T>& operator[](const node_ref& ref){

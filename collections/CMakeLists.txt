@@ -14,6 +14,7 @@ set(INCLUDE_INTERFACE
 )
 set(LINKED_LIBRARIES
   glm
+  cgeom
 )
 
 
@@ -23,7 +24,7 @@ add_library(${LIB_NAME} STATIC
  
 target_include_directories(${LIB_NAME} PRIVATE ${INCLUDE_PRIVATE}) 
 target_include_directories(${LIB_NAME} INTERFACE ${INCLUDE_INTERFACE})
-target_link_libraries(${LIB_NAME} ${LINKED_LIBRARIES})
+target_link_libraries(${LIB_NAME} PUBLIC ${LINKED_LIBRARIES})
 target_compile_options(${LIB_NAME} PRIVATE ${COMPILE_FLAGS})
 
 

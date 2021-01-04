@@ -30,6 +30,10 @@ NCursesRender::NCursesRender(){
   noecho();
   curs_set(false);
   clear();
+  
+  start_color();
+  init_pair(COLOR_BLACK_INDEX, COLOR_BLACK, COLOR_BLACK);
+  init_pair(COLOR_WHITE_INDEX, COLOR_BLACK, COLOR_WHITE);
 }
 
 void NCursesRender::render(){
@@ -43,9 +47,26 @@ void NCursesRender::render(){
   m_tracer.render(globals);
   for(int x  = 0; x < m_tracer.width(); x++){
     for(int y = 0; y < m_tracer.height(); y++){
+      uint32_t depth = m_tracer.buffer()[y*m_tracer.width() + x];
       std::stringstream oss;
-      oss << m_tracer.buffer()[y*m_tracer.width() + x];
+      if(depth == 0){
+        oss << ' ';
+      }else{
+        oss << depth;
+      }
+      if(depth == 0){
+        attron(COLOR_PAIR(COLOR_BLACK_INDEX));
+      }else{ 
+        attron(COLOR_PAIR(COLOR_WHITE_INDEX));
+      }
+      
       mvaddch(y,x,oss.str()[0]);
+      
+      if(depth == 0){
+        attroff(COLOR_PAIR(COLOR_BLACK_INDEX));
+      }else{ 
+        attroff(COLOR_PAIR(COLOR_WHITE_INDEX));
+      }
     }
   }
   //m_tracer.displayBuffer(debug::print::printFile);
@@ -58,7 +79,7 @@ void NCursesRender::displayScene(std::ostream& out){
     for(int i = 0; i < depth; i++){
       out << " ";
     }
-    out << "Transform: " << glm::to_string(node.transform()) << std::endl;
+    out << "Transform: " << glm::to_string(node.transform().transform()) << std::endl;
     
     if(node.hasPayload()){  
       for(int i = 0; i < depth; i++){
@@ -69,11 +90,19 @@ void NCursesRender::displayScene(std::ostream& out){
         out << " ";
       }
       out << "Layers:[";
+      
+      /**
       for(int i = render::asset::Mesh::LayerType::START + 1; i < render::asset::Mesh::LayerType::END; i++){
         if(node.data()->hasLayer((render::asset::Mesh::LayerType)i)){
           out << i << ",";
         }
       }
+      **/
+      render::asset::Mesh::VertexLayer::for_each([&](typename render::asset::Mesh::VertexLayer::id layerName){
+        if(node.data()->hasLayer(layerName)){
+          out << layerName << ",";
+        }
+      });
       out << "]";
       out << std::endl << std::endl;
     }

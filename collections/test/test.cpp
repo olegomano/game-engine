@@ -65,10 +65,11 @@ TEST(scene_graph, update){
   graph[lastNode].transform() = glm::translate(glm::mat4(1), glm::vec3(1.0f, 0.0f, 0.0f)); 
 
   graph.update();
-  ASSERT_EQ(graph.globals().size(), count + 2);
+  ASSERT_EQ(graph.globals().size(), count + 1);
   count = 0;
   for(const auto& globalTransform : graph.globals()){
-    ASSERT_NEAR(count++,std::get<glm::mat4>(globalTransform)[3][0],0.000001f);
+    //ASSERT_NEAR(count++,std::get<glm::mat4>(globalTransform)[3][0],0.000001f);
+    ASSERT_NEAR(++count,graph.get_transform(globalTransform)[3][0],0.000001f );
   }  
   graph.update();
 }

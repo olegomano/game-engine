@@ -29,7 +29,7 @@ set(LINKED_LIBRARIES
   ${CURSES_LIBRARIES}
   assimp
   glm
-  libcgeom
+  cgeom
   collections
 )
 

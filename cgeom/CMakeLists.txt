@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(cgeom)
 
-set(LIB_NAME libcgeom)
+set(LIB_NAME cgeom)
 
 set(LIB_SRC
   src/test.cpp 
@@ -26,7 +26,7 @@ add_library(${LIB_NAME} STATIC
  
 target_include_directories(${LIB_NAME} PRIVATE ${INCLUDE_PRIVATE}) 
 target_include_directories(${LIB_NAME} INTERFACE ${INCLUDE_INTERFACE})
-target_link_libraries(${LIB_NAME} ${LINKED_LIBRARIES})
+target_link_libraries(${LIB_NAME} PUBLIC ${LINKED_LIBRARIES})
 target_compile_options(${LIB_NAME} PRIVATE ${COMPILE_FLAGS})
 
 
