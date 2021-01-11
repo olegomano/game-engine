@@ -8,7 +8,7 @@
 int main(){
   render::RenderContext c;
   c.create(render::RenderContext::TEXT); 
-  auto plane = c.createAsset("../../assets/plane.dae");
+  auto plane = c.createAsset("../../assets/cube.dae");
   
 
   c.addInputListener([&](uint32_t key){
@@ -35,7 +35,6 @@ int main(){
     auto timer = debug::timer::ImmidiateTimer([&](){
       c.render();
     });
-
     debug::print::print_debug("Render Time: ", timer.time() ,"ms");
 
     std::this_thread::sleep_for(std::chrono::milliseconds(16));

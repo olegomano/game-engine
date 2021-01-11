@@ -10,3 +10,9 @@
 [submodule "extern/lua/lua"]
 	path = extern/lua/lua
 	url = git@github.com:lua/lua.git
+[submodule "extern/sail"]
+	path = extern/sail
+	url = git@github.com:smoked-herring/sail.git
+[submodule "extern/stb"]
+	path = extern/stb
+	url = git@github.com:nothings/stb.git

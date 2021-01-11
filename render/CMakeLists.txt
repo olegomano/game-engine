@@ -9,12 +9,14 @@ set(LIB_SRC
   src/ncurses_impl/rasterizer.cpp
   src/ncurses_impl/asset.cpp
   src/asset_import/import.cpp
+  src/asset_import/texture.cpp
   src/asset_import/asset.cpp
 )
 
 set(INCLUDE_PRIVATE
   ${OPENGL_INCLUDE_DIRS}
   ${CURSES_INCLUDE_DIRS}
+  ${STB_INCLUDE_DIRS}
   include/
   src/
 )
@@ -36,7 +38,7 @@ set(LINKED_LIBRARIES
 add_library(librender STATIC 
   ${LIB_SRC}
 ) 
- 
+#add_definitions( -DSTB_IMAGE_IMPLEMENTATION )
 target_include_directories(librender PRIVATE ${INCLUDE_PRIVATE}) 
 target_include_directories(librender INTERFACE ${INCLUDE_INTERFACE})
 target_link_libraries(librender ${LINKED_LIBRARIES})

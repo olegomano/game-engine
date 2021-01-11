@@ -4,9 +4,24 @@
 #include <glm/gtx/string_cast.hpp>
 
 TEST(asset_import, import_collada){
-  render::asset::SceneAsset asset("../../assets/cube.dae");
+  render::asset::SceneAsset asset("../../assets/plane.dae");
   std::cout << asset << std::endl;
 }
+
+TEST(asset_import, import_collada_texture){
+  render::asset::SceneAsset asset("../../assets/cube.dae");
+  std::cout << asset << std::endl;
+
+  const render::asset::Mesh* mesh = asset.findMesh("Cube-mesh");
+  
+  ASSERT_NE(mesh,nullptr);
+  ASSERT_EQ(mesh->hasTexture(render::asset::Mesh::TextureLayer::diffuse),true);
+  ASSERT_EQ(mesh->hasTexture(render::asset::Mesh::TextureLayer::normal),false);
+  
+  ASSERT_EQ(mesh->hasTexture<render::asset::Mesh::TextureLayer::diffuse>(),true);
+  ASSERT_EQ(mesh->hasTexture<render::asset::Mesh::TextureLayer::normal>(),false);
+}
+
 
 TEST(asset_import, scene_graph_append){
   render::asset::SceneAsset cube("../../assets/cube.dae");
@@ -45,7 +60,7 @@ TEST(asset_import,ray_trace){
   tracer.render(scene.globals());
   for(int y = 0; y < tracer.height(); y++){
     for(int x = 0; x < tracer.width(); x++){
-      std::cout << tracer.buffer()[y * tracer.width() + x] << " ";
+      std::cout << tracer.buffer()[y * tracer.width() + x].distance << " ";
     }
     std::cout << std::endl;
   } 

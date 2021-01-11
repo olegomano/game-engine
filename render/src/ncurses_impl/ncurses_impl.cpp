@@ -47,14 +47,14 @@ void NCursesRender::render(){
   m_tracer.render(globals);
   for(int x  = 0; x < m_tracer.width(); x++){
     for(int y = 0; y < m_tracer.height(); y++){
-      uint32_t depth = m_tracer.buffer()[y*m_tracer.width() + x];
+      raytrace::Result result = m_tracer.buffer()[y*m_tracer.width() + x];
       std::stringstream oss;
-      if(depth == 0){
+      if(result.distance == 0){
         oss << ' ';
       }else{
-        oss << depth;
+        oss << result.distance;
       }
-      if(depth == 0){
+      if(result.distance == 0){
         attron(COLOR_PAIR(COLOR_BLACK_INDEX));
       }else{ 
         attron(COLOR_PAIR(COLOR_WHITE_INDEX));
@@ -62,7 +62,7 @@ void NCursesRender::render(){
       
       mvaddch(y,x,oss.str()[0]);
       
-      if(depth == 0){
+      if(result.distance == 0){
         attroff(COLOR_PAIR(COLOR_BLACK_INDEX));
       }else{ 
         attroff(COLOR_PAIR(COLOR_WHITE_INDEX));
@@ -91,22 +91,22 @@ void NCursesRender::displayScene(std::ostream& out){
       }
       out << "Layers:[";
       
-      /**
-      for(int i = render::asset::Mesh::LayerType::START + 1; i < render::asset::Mesh::LayerType::END; i++){
-        if(node.data()->hasLayer((render::asset::Mesh::LayerType)i)){
-          out << i << ",";
-        }
-      }
-      **/
-      render::asset::Mesh::VertexLayer::for_each([&](typename render::asset::Mesh::VertexLayer::id layerName){
+     render::asset::Mesh::VertexLayer::for_each([&](typename render::asset::Mesh::VertexLayer::id layerName){
         if(node.data()->hasLayer(layerName)){
-          out << layerName << ",";
+          out << render::asset::Mesh::VertexLayer::layer_name(layerName) << ", ";
+        }
+      });
+      out << "]" << std::endl;
+      out << "Textures:[";
+      render::asset::Mesh::TextureLayer::for_each([&](typename render::asset::Mesh::TextureLayer::id name){
+        if(node.data()->hasTexture(name)){
+          out << render::asset::Mesh::TextureLayer::layer_name(name) << ", ";
         }
       });
       out << "]";
       out << std::endl << std::endl;
     }
-    return depth++; 
+    return ++depth; 
   },0);
 }
 

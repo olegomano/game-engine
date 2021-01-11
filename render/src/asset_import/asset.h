@@ -10,185 +10,26 @@
 #include <tuple>
 #include <iostream>
 #include <glm/gtx/string_cast.hpp>
+#include <collections/debug_print.h>
 #include <collections/scene_graph.h>
 #include <cgeom/transform.h>
+#include "texture.h"
+#include "mesh.h"
 
 namespace render{
 namespace asset{
-
-template<typename T>
-struct Face{
-  std::array<T,3> face;
-  
-  const T& operator[](uint8_t indx) const {
-    assert(indx < 3);
-    return face[indx];
-  }
-
-  T& operator[](uint8_t indx) {
-    assert(indx < 3);
-    return face[indx];
-  }
-};
-
-template<typename T>
-std::ostream& operator<<(std::ostream& os, const Face<T>& face){
-  os << "[";
-  for(const auto& v : face.face){
-    os << glm::to_string(v) << ", ";
-  }
-  os << "]";
-  return os;
-}
-
-class Texture{
-public:
-  Texture(const std::string& path){
-    
-  }
-
-  const std::vector<uint8_t>& pixels() const {
-    return m_pixels;
-  }
-
-  const uint32_t width() const {
-    return m_width;
-  }
-
-  const uint32_t height() const {
-    return m_height;
-  }
-
-private:
-  uint32_t m_width  = 0;
-  uint32_t m_height = 0;
-  std::vector<uint8_t> m_pixels;
-};
-
-class Mesh{  
-public:    
-  friend std::ostream& operator<<(std::ostream& os, const Mesh& m);
-  
-  struct VertexLayer{
-    enum id{
-      START = -1,
-      vertex,
-      uv_1,
-      uv_2,
-      normal,
-      bone,
-      END
-    };
-    
-    template<typename T, uint32_t _T_Type>
-    struct type{
-      static constexpr id _id = (id)_T_Type;
-      std::optional<std::vector<Face<T>>> faces;
-    };
-    
-    inline static std::string layer_name(id layer){
-      switch(layer){
-      case vertex:
-        return "vertex";
-      case uv_1:
-        return "uv_1";
-      default:
-        return "unknown";
-      }
-    };
-
-    template<typename T>
-    inline static void for_each(T&& f){
-      for(uint32_t i = START + 1; i < END; i++){
-        f((id)i);
-      }
-    }
-  };
-
-  
-  struct TextureLayer{
-    enum id{
-      START = -1,
-      diffuse,
-      normal,
-      displace,
-      END
-    };
-    
-    template<uint32_t _T_Type>
-    struct type {
-      static constexpr id _id = (id)_T_Type;
-      std::optional<Texture> texture;
-    };
-  }; 
-
- 
-  typedef std::tuple<
-    VertexLayer::type<glm::vec4,VertexLayer::vertex>,
-    VertexLayer::type<glm::vec2,VertexLayer::uv_1>,
-    VertexLayer::type<glm::vec2,VertexLayer::uv_2>,
-    VertexLayer::type<glm::vec4,VertexLayer::normal>,
-    VertexLayer::type<glm::vec4,VertexLayer::bone>
-  >VertexGroup;
-  
-  template<typename VertexLayer::id T, typename Vector>
-  void addLayer(Vector&& vector){
-    std::get<T>(m_layers).faces = std::move(vector);
-  }  
-  
-  bool hasLayer(const typename VertexLayer::id& t) const {
-    return std::apply([&](auto&... layer){    
-      return ( ( (layer._id == t) && layer.faces.has_value()) || ... );    
-    },m_layers);
-  }
-
-  template<typename VertexLayer::id T>
-  bool hasLayer() const {
-    return std::get<T>(m_layers).faces.has_value();
-  }
-  
-  template<typename VertexLayer::id T>
-  const auto& layer() const {
-    assert(hasLayer<T>());
-    return std::get<T>(m_layers).faces.value();
-  }
-
-  template<typename Callback>
-  void layer(const typename VertexLayer::id& t, Callback&& callback) const {
-    std::apply([&](auto&... layer){
-      std::make_tuple( dynamicApplyLayer(t,layer,callback) ... );
-    },m_layers);
-  }
-
-  const std::string& name() const {
-    return m_name;
-  }
-
-private:
-  
-  template<typename Callback, typename Layer>
-  bool dynamicApplyLayer(const typename VertexLayer::id& type, const Layer& layer, Callback&& callback) const {
-    if(type == layer._id){
-      callback(layer.faces.value());
-      return true;
-    }
-    return false;
-  }
-  
-  VertexGroup m_layers;
-  std::string m_name = "";
-  
-};
 
 class SceneAsset{
 public:    
   friend std::ostream& operator<<(std::ostream& os, const SceneAsset& sa);
   
-  SceneAsset(const std::string& path){
+  SceneAsset(const std::string& path) : m_path(path){
+    m_woringDir = path.substr(0,path.find_last_of("/"));
+
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);       
     if(scene == nullptr){
-      std::cout << "Failed to open file " << path << std::endl;
+      debug::print::print_error("Failed to open file",path);
       return;
     }
     handleNode(scene->mRootNode,scene,collections::scene_graph::Scene<Mesh>::Root_Ref);
@@ -197,9 +38,20 @@ public:
   collections::scene_graph::Scene<const Mesh*> scene(){
     collections::scene_graph::Scene<const Mesh*> scene;
     m_meshes.traverse([&](const collections::scene_graph::Node<Mesh>& node, collections::scene_graph::node_ref parent){
-      return scene.createNode( (const Mesh*)&node.data() , parent);
+      auto nodeRef = scene.createNode( (const Mesh*)&node.data() , parent);
+      scene[nodeRef].transform() = node.transform();
+      return nodeRef;
     },collections::scene_graph::Scene<Mesh*>::Root_Ref);
     return scene;
+  }
+
+  const Mesh* findMesh(const std::string& name) const {
+    for(const collections::scene_graph::Node<Mesh>& meshNode : m_meshes.nodes()){
+      if(meshNode->name() == name){
+        return (const Mesh*)(&(*meshNode));
+      }
+    } 
+    return nullptr;
   }
 
   const auto& meshes() const{
@@ -213,33 +65,106 @@ private:
   void handleNode(aiNode* node, const aiScene* scene, collections::scene_graph::node_ref parent){
     //std::cout << "Handling Node meshes: " << node->mNumMeshes << "children " << node->mNumChildren << std::endl;
     auto currentNode = m_meshes.createNode(parent);
+    aiMatrix4x4 nodeTransform = node->mTransformation;
+    glm::mat4 transform;
 
+    for(int x = 0; x < 4; x++){
+      for(int y = 0; y < 4; y++){
+        transform[x][y] = nodeTransform[x][y];
+      }
+    }
+    m_meshes[currentNode].transform().transform() = transform;  
+    
     for(unsigned int i = 0; i < node->mNumMeshes; i++){
       aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];  
-      Mesh m;
-      std::vector<Face<glm::vec4>> vertices;
-      vertices.reserve(mesh->mNumFaces*3);
-      for(uint32_t i = 0; i < mesh->mNumFaces; i++){
-        aiFace face = mesh->mFaces[i];
-        Face<glm::vec4> f;
-        for(uint32_t j = 0; j < 3; j++){
-          f.face[j].x = mesh->mVertices[face.mIndices[j]].x;
-          f.face[j].y = mesh->mVertices[face.mIndices[j]].y;
-          f.face[j].z = mesh->mVertices[face.mIndices[j]].z;
-          f.face[j].w = 1;
-        } 
-        vertices.push_back(f);
-      }
-      m.addLayer<Mesh::VertexLayer::vertex>(std::move(vertices));
-      auto meshNode = m_meshes.createNode(std::move(m),currentNode);
+      auto meshNode = m_meshes.createNode(handleMesh(mesh,scene),currentNode);
     }
 
     for(int i = 0; i < node->mNumChildren; i++){
       handleNode(node->mChildren[i],scene,currentNode);
     }
   }
+
+  Mesh handleMesh(aiMesh* mesh, const aiScene* scene){
+    Mesh m;
+    m.setName(mesh->mName.data); 
+    if(mesh->HasFaces()){
+      std::vector<Face<glm::vec4>> vertices;
+      std::vector<Face<glm::vec4>> normals;
+      std::vector<Face<glm::vec2>> uv;
+      
+      vertices.reserve(mesh->mNumFaces*3); 
+      normals.reserve(mesh->mNumFaces*3);
+      uv.reserve(mesh->mNumFaces*3);
+
+      for(uint32_t i = 0; i < mesh->mNumFaces; i++){
+        aiFace face = mesh->mFaces[i];
+        Face<glm::vec4> vertFace;
+        Face<glm::vec4> normalFace;
+        Face<glm::vec2> uvFace;
+
+        for(uint32_t j = 0; j < 3; j++){  
+          if(mesh->HasPositions()){
+            vertFace.face[j].x = mesh->mVertices[face.mIndices[j]].x;
+            vertFace.face[j].y = mesh->mVertices[face.mIndices[j]].y;
+            vertFace.face[j].z = mesh->mVertices[face.mIndices[j]].z;
+            vertFace.face[j].w = 1;
+          }
+          if(mesh->HasNormals()){
+            normalFace.face[j].x = mesh->mNormals[face.mIndices[j]].x;
+            normalFace.face[j].y = mesh->mNormals[face.mIndices[j]].y;
+            normalFace.face[j].z = mesh->mNormals[face.mIndices[j]].z;
+            normalFace.face[j].w = 0;
+          }
+          if(mesh->HasTextureCoords(0)){
+            uvFace.face[j].x = mesh->mTextureCoords[0][face.mIndices[j]].x;
+            uvFace.face[j].y = mesh->mTextureCoords[0][face.mIndices[j]].y;
+          }
+        } 
+        vertices.push_back(std::move(vertFace));
+        normals.push_back(std::move(normalFace));
+        uv.push_back(std::move(uvFace));
+      }
+
+
+      if(mesh->HasPositions()){
+        m.addLayer<Mesh::VertexLayer::vertex>(std::move(vertices));
+      }
+      if(mesh->HasNormals()){
+        m.addLayer<Mesh::VertexLayer::normal>(std::move(normals));
+      }
+      if(mesh->HasTextureCoords(0)){
+        m.addLayer<Mesh::VertexLayer::uv_1>(std::move(uv));
+      }
+    }
+    //handle textures
+    const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+    std::string diffusePath;
+    if(getTexture(aiTextureType_DIFFUSE,material,diffusePath)){
+      diffusePath = m_woringDir + "/" + diffusePath;
+      Texture txt = Texture(diffusePath);
+      debug::print::print_debug("Loaded texture",diffusePath," width: ",txt.width(), " height: ", txt.height() );
+      m.addTexture<Mesh::TextureLayer::diffuse>(std::move(txt));      
+    } 
+    return m;
+  }
+
+  bool getTexture(aiTextureType type, const aiMaterial* material, std::string& path){
+    if(!material->GetTextureCount(type)){
+      return false;
+    }
+    aiString textureName;
+    if( material->Get(AI_MATKEY_TEXTURE(type, 0), textureName) != AI_SUCCESS ){
+      return false;
+    }
+    path = textureName.data;
+    return true;
+  }
+
 private:
   collections::scene_graph::Scene<Mesh> m_meshes;
+  const std::string m_path;
+  std::string m_woringDir;
 };
 
 

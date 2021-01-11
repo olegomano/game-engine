@@ -39,6 +39,9 @@ endmacro()
 #find_package(SDL2 REQUIRED)
 #find_package(GLEW REQUIRED)
 
+
+set(SAIL_INCLUDE_DIRS extern/sail/src)
+set(STB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/extern/stb)
 add_subdirectory("extern/googletest")
 add_subdirectory("extern/assimp")
 add_subdirectory("extern/glm")

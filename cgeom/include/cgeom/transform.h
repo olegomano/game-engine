@@ -37,6 +37,10 @@ public:
     m_transform =t.m_transform;
     return *this;
   }
+  
+  glm::mat4& transform(){
+    return m_transform;
+  }
 
   const glm::mat4& transform() const {
     return m_transform;
