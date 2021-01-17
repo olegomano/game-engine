@@ -15,7 +15,7 @@ public:
   }
 
   template<typename TIME_UNIT = std::chrono::milliseconds>
-  auto time(){
+  auto time() const{
     return std::chrono::duration_cast<TIME_UNIT>(m_runTime).count();
   }
   
@@ -35,6 +35,24 @@ public:
 
 private:
   std::chrono::high_resolution_clock::time_point m_lastTick = std::chrono::high_resolution_clock::now();
+};
+
+class PipelineTimer{
+public:
+  void start(const std::string name){
+
+  }
+
+  void finish(){
+
+  }
+
+  const auto& time() const {
+    return 1;
+  }
+private:
+
+
 };
 
 

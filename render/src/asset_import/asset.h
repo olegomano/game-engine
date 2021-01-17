@@ -12,6 +12,7 @@
 #include <glm/gtx/string_cast.hpp>
 #include <collections/debug_print.h>
 #include <collections/scene_graph.h>
+#include <collections/stable_vector.h>
 #include <cgeom/transform.h>
 #include "texture.h"
 #include "mesh.h"
@@ -36,26 +37,25 @@ public:
   }
 
   collections::scene_graph::Scene<const Mesh*> scene(){
-    collections::scene_graph::Scene<const Mesh*> scene;
-    m_meshes.traverse([&](const collections::scene_graph::Node<Mesh>& node, collections::scene_graph::node_ref parent){
-      auto nodeRef = scene.createNode( (const Mesh*)&node.data() , parent);
-      scene[nodeRef].transform() = node.transform();
-      return nodeRef;
-    },collections::scene_graph::Scene<Mesh*>::Root_Ref);
+    collections::scene_graph::Scene<const Mesh*> scene = m_scene;
     return scene;
   }
 
   const Mesh* findMesh(const std::string& name) const {
-    for(const collections::scene_graph::Node<Mesh>& meshNode : m_meshes.nodes()){
-      if(meshNode->name() == name){
-        return (const Mesh*)(&(*meshNode));
+    for(const collections::scene_graph::Node<const Mesh*>& meshNode : m_scene.nodes() ){
+      if((*meshNode)->name() == name){
+        return (const Mesh*)((*meshNode));
       }
     } 
     return nullptr;
   }
 
   const auto& meshes() const{
-    return m_meshes.nodes();
+    return m_meshes;
+  }
+
+  const std::string& path() const {
+    return m_path;
   }
  
   ~SceneAsset(){
@@ -64,7 +64,7 @@ public:
 private:
   void handleNode(aiNode* node, const aiScene* scene, collections::scene_graph::node_ref parent){
     //std::cout << "Handling Node meshes: " << node->mNumMeshes << "children " << node->mNumChildren << std::endl;
-    auto currentNode = m_meshes.createNode(parent);
+    auto currentNode = m_scene.createNode(parent);
     aiMatrix4x4 nodeTransform = node->mTransformation;
     glm::mat4 transform;
 
@@ -73,11 +73,13 @@ private:
         transform[x][y] = nodeTransform[x][y];
       }
     }
-    m_meshes[currentNode].transform().transform() = transform;  
+    m_scene[currentNode].transform().transform() = transform;  
     
     for(unsigned int i = 0; i < node->mNumMeshes; i++){
       aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];  
-      auto meshNode = m_meshes.createNode(handleMesh(mesh,scene),currentNode);
+      Mesh m = handleMesh(mesh,scene);
+      m_meshes.push_back(std::move(m));
+      auto meshNode = m_scene.createNode( &(m_meshes[m_meshes.size() - 1]),currentNode);
     }
 
     for(int i = 0; i < node->mNumChildren; i++){
@@ -142,9 +144,12 @@ private:
     std::string diffusePath;
     if(getTexture(aiTextureType_DIFFUSE,material,diffusePath)){
       diffusePath = m_woringDir + "/" + diffusePath;
-      Texture txt = Texture(diffusePath);
-      debug::print::print_debug("Loaded texture",diffusePath," width: ",txt.width(), " height: ", txt.height() );
-      m.addTexture<Mesh::TextureLayer::diffuse>(std::move(txt));      
+      if(!m_textures.count(diffusePath)){
+        Texture txt = Texture(diffusePath);
+        debug::print::print_debug("Loaded texture",diffusePath," width: ",txt.width(), " height: ", txt.height() );
+        m_textures[diffusePath] = std::move(txt);
+      }
+      m.addTexture<Mesh::TextureLayer::diffuse>(&(m_textures[diffusePath]));      
     } 
     return m;
   }
@@ -162,7 +167,10 @@ private:
   }
 
 private:
-  collections::scene_graph::Scene<Mesh> m_meshes;
+  collections::scene_graph::Scene<const Mesh*> m_scene;
+  collections::stable_vector::StableVector<Mesh> m_meshes;
+  std::unordered_map<std::string,Texture> m_textures;
+
   const std::string m_path;
   std::string m_woringDir;
 };

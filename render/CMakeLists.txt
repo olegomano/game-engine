@@ -2,20 +2,28 @@ cmake_minimum_required(VERSION 3.5)
 project(render)
 find_package(OpenGL REQUIRED)
 find_package(Curses REQUIRED)
+find_package(SDL2 REQUIRED)
+find_package(GLUT REQUIRED)
 
 set(LIB_SRC
   src/render.cpp 
+  src/input_handler_impl.cpp
   src/ncurses_impl/ncurses_impl.cpp 
   src/ncurses_impl/rasterizer.cpp
   src/ncurses_impl/asset.cpp
+  src/software_impl/software_impl.cpp
+  src/software_impl/debug_ui_handler.cpp
   src/asset_import/import.cpp
   src/asset_import/texture.cpp
   src/asset_import/asset.cpp
 )
 
 set(INCLUDE_PRIVATE
+  ${GLEW_INCLUDE_DIRS}
+  ${GLUT_INCUDE_DIRS}
   ${OPENGL_INCLUDE_DIRS}
   ${CURSES_INCLUDE_DIRS}
+  ${SDL2_INCLUDE_DIRS}
   ${STB_INCLUDE_DIRS}
   include/
   src/
@@ -27,12 +35,15 @@ set(INCLUDE_INTERFACE
 
 set(LINKED_LIBRARIES
   ${GLEW_LIBRARIES}
+  ${GLUT_LIBRARIES}
   ${OPENGL_LIBRARIES}
   ${CURSES_LIBRARIES}
+  ${SDL2_LIBRARIES}
   assimp
   glm
   cgeom
   collections
+  imgui
 )
 
 add_library(librender STATIC 

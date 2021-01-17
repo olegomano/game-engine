@@ -7,6 +7,7 @@ class IRenderImpl{
 public:
   virtual void render() = 0;
   virtual IAsset addAsset(asset::SceneAsset& asset) = 0;
+  virtual void addUiHandler(const RenderContext::UiDrawHandler& handler){}
   virtual ~IRenderImpl(){}
 };
 }

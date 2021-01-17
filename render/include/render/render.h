@@ -68,22 +68,47 @@ private:
 
 class IInputManager{
 public:
+  enum event{
+    Quit
+  };
+
   typedef std::function<void(uint32_t)> InputHandler; 
+  typedef std::function<void(event e)> EventHandler;
+
   virtual void pollInput() = 0;
   void addInputListener(const InputHandler& handler){
     m_handlers.push_back(handler);
   }
+
+  void addEventHandler(const EventHandler handler){
+    m_eventHandler.push_back(handler);
+  }
 protected:
+  void sendKeyEvent(uint32_t event){
+    for(auto& handler : m_handlers){
+      handler(event);
+    }
+  }
+
+  void sendEvent(event e){
+    for(auto& handler : m_eventHandler){
+      handler(e);
+    }
+  }
+
   std::vector<InputHandler> m_handlers;
+  std::vector<EventHandler> m_eventHandler;
 };
 
 class IRenderImpl;
 class RenderContext{
 public:
-
+  typedef std::function<void()> UiDrawHandler;
   enum Type{
     TEXT,
     TEXT_RAY,
+    SOFTWARE,
+    GL_2,
     GL_3
   };
   RenderContext();
@@ -91,9 +116,12 @@ public:
   void createPrimitive(primitive::Value v);
   IAsset createAsset(const std::string& path);
   
-
   void render();
+  void addUiHandler(const UiDrawHandler& handler);
   void addInputListener(const IInputManager::InputHandler& handler);
+  void addEventListener(const IInputManager::EventHandler& handler);
+  
+
   ~RenderContext();
 private:
   std::unique_ptr<IRenderImpl> m_impl;

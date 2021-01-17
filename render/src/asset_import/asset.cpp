@@ -31,7 +31,7 @@ std::ostream& render::asset::operator<<(std::ostream& out, const render::asset::
   int meshIndex = 0;
   for(const auto& mesh : a.meshes()){
     out << "Mesh Index: " << meshIndex++ << std::endl;
-    out << *mesh << std::endl;
+    out << mesh << std::endl;
   }
   return out;
 }

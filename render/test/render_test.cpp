@@ -7,9 +7,14 @@
 
 int main(){
   render::RenderContext c;
-  c.create(render::RenderContext::TEXT); 
+  c.create(render::RenderContext::SOFTWARE); 
   auto plane = c.createAsset("../../assets/cube.dae");
+  bool running = true;
   
+
+  c.addUiHandler([&](){
+
+  });
 
   c.addInputListener([&](uint32_t key){
     debug::print::print_debug("Pressed Key ", key);
@@ -30,7 +35,14 @@ int main(){
     }
   });
 
-  while(true){
+
+  c.addEventListener([&](render::IInputManager::event e){
+    if( e == render::IInputManager::Quit){
+      running = false;
+    }
+  });
+
+  while(running){
     debug::print::print_debug("=================");
     auto timer = debug::timer::ImmidiateTimer([&](){
       c.render();

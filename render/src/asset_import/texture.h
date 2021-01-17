@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <assert.h>
 
 namespace render{
 namespace asset{
@@ -8,6 +9,7 @@ namespace asset{
 class Texture{
 public:
   Texture(const std::string& path);
+  Texture() : m_path(""){};
 
   const uint8_t* pixels() const {
     return m_pixels;
@@ -26,6 +28,7 @@ public:
   }
 
   uint32_t sample(float x, float y) const{ 
+    assert(m_pixels != nullptr);
     x = clamp(0.0f,1.0f,x);
     y = clamp(0.0f,1.0f,y);
     uint32_t* pixels = (uint32_t*)m_pixels;
@@ -33,7 +36,10 @@ public:
     uint32_t  yPixel = y * m_width;
     uint32_t  pixel = pixels[yPixel * m_width + xPixel];
     return pixel;
+  }
 
+  const std::string& path() const {
+    return m_path;
   }
 private:
   template<typename T>
@@ -51,6 +57,7 @@ private:
   int m_height = 0;
   int m_channels = 0;
   uint8_t* m_pixels = nullptr;
+  std::string m_path;
 };
 
 

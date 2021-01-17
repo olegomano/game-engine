@@ -117,7 +117,7 @@ public:
     template<uint32_t _T_Type>
     struct type {
       static constexpr id _id = (id)_T_Type;
-      std::optional<Texture> texture;
+      std::optional<Texture*> texture;
     };
   }; 
 
@@ -143,7 +143,7 @@ public:
   }
 
   template<TextureLayer::id T>
-  void addTexture(Texture&& txt){
+  void addTexture(Texture* txt){
     std::get<T>(m_textures).texture = txt;
   }
 
@@ -159,14 +159,33 @@ public:
     },m_textures);  
   }
 
+  const Texture* const texture(TextureLayer::id id) const {
+    Texture* result = nullptr; 
+    auto checker = [&](const auto& txt){
+      if(txt._id == id){
+        result = txt.texture.value(); 
+      }
+      return true;
+    };
+
+    std::apply([&](auto&... layer) mutable {
+      return ( ( checker(layer) ) || ... );      
+    },m_textures);
+    return (const Texture*) result;
+  }
+
   template<TextureLayer::id T>
   const Texture* const texture() const {
     assert(hasTexture<T>());
-    return (const Texture* const) &(std::get<TextureLayer::type<T>>(m_textures).texture);
+    return (const Texture* const) (std::get<TextureLayer::type<T>>(m_textures).texture.value());
   }
 
   template<typename VertexLayer::id T, typename Vector>
   void addLayer(Vector&& vector){
+    if(m_faceCount == 0){
+      m_faceCount = vector.size();
+    }
+    assert(m_faceCount == vector.size());
     std::get<T>(m_layers).faces = std::move(vector);
   }  
   
@@ -181,6 +200,9 @@ public:
     return std::get<T>(m_layers).faces.has_value();
   }
   
+  /**
+   * returns a vector<Face<?>>
+   */
   template<typename VertexLayer::id T>
   const auto& layer() const {
     assert(hasLayer<T>());
@@ -198,6 +220,10 @@ public:
     return m_name;
   }
 
+  const uint32_t faceCount() const {
+    return m_faceCount;
+  }
+
 private:
   
   template<typename Callback, typename Layer>
@@ -212,7 +238,7 @@ private:
   VertexGroup m_layers;
   TextureGroup m_textures;
   std::string m_name = "";
-  
+  uint32_t m_faceCount = 0;
 };
 
 

@@ -54,19 +54,13 @@ void NCursesRender::render(){
       }else{
         oss << result.distance;
       }
-      if(result.distance == 0){
-        attron(COLOR_PAIR(COLOR_BLACK_INDEX));
-      }else{ 
-        attron(COLOR_PAIR(COLOR_WHITE_INDEX));
+      int colorIndex = COLOR_BLACK_INDEX;
+      if(result.distance > 0){
+        colorIndex = COLOR_WHITE_INDEX;
       }
-      
+      attron(COLOR_PAIR(colorIndex));
       mvaddch(y,x,oss.str()[0]);
-      
-      if(result.distance == 0){
-        attroff(COLOR_PAIR(COLOR_BLACK_INDEX));
-      }else{ 
-        attroff(COLOR_PAIR(COLOR_WHITE_INDEX));
-      }
+      attroff(COLOR_PAIR(colorIndex));
     }
   }
   //m_tracer.displayBuffer(debug::print::printFile);
