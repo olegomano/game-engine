@@ -2,7 +2,28 @@
 #include <glm/gtx/transform.hpp>
 #include <collections/stable_vector.h>
 #include <collections/scene_graph.h>
+#include <collections/ring_buffer.h>
 #include <glm/gtx/string_cast.hpp>
+#include <iostream>
+
+
+TEST(ring_buffer,iterate){
+  collections::ring_buffer::RingBuffer<collections::ring_buffer::ArrayWrapper<float,32>> rbuffer;
+  for(int i = 0; i < rbuffer.size(); i++){
+    rbuffer.push_back(i);
+  }
+  int count = 0;
+  for(const int& i : rbuffer){
+    ASSERT_EQ(i,count++);
+  }
+  for(int i = 0; i < rbuffer.size() * 2; i++){
+    rbuffer.push_back(i);
+  }
+  count = rbuffer.size();
+  for(const int& i : rbuffer){
+    ASSERT_EQ(i,count++);
+  }
+}
 
 TEST(stable_vector, insert){
   std::vector<uint32_t> vec;

@@ -1,8 +1,10 @@
 #include "software_impl.h"
 #include "debug_ui_handler.h"
+#include "ui_helpers.h"
 #include <imgui.h>
 #include <backends/imgui_impl_sdl.h>
 #include <backends/imgui_impl_opengl2.h>
+#include <collections/timer.h>
 
 render::software::Asset::Asset(uint32_t index, SoftwareRenderer* owner) : m_index(index),m_owner(owner){
 }
@@ -41,19 +43,25 @@ render::software::SoftwareRenderer::SoftwareRenderer(const render::window::param
     ImGui_ImplOpenGL2_Init();
 }
 
+static int count = 0;
 void render::software::SoftwareRenderer::render(){
+  count++;
   m_window.clear();
-  ImGui_ImplOpenGL2_NewFrame();
-  ImGui_ImplSDL2_NewFrame(m_window.window());
-  ImGui::NewFrame();
-  ImGui::BeginTabBar("TabBar",0); 
-  for(auto& handler : m_uiHandlers){
-    handler();
-  }
-  ImGui::EndTabBar();
-
-  ImGui::Render();
-  ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+  debug::timer::ImmidiateTimer drawUI([&](){
+    ImGui_ImplOpenGL2_NewFrame();
+    ImGui_ImplSDL2_NewFrame(m_window.window());
+    ImGui::NewFrame();
+  
+    ui<std::decay<decltype(m_frameRate)>::type>::draw(m_frameRate);
+    ImGui::BeginTabBar("TabBar",0); 
+    for(auto& handler : m_uiHandlers){
+      handler();
+    }
+    ImGui::EndTabBar();
+    ImGui::Render();
+    ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+  });
+  m_frameRate.push_back(drawUI.time());
   m_window.swapBuffers();
 }
 

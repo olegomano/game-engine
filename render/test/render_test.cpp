@@ -8,7 +8,9 @@
 int main(){
   render::RenderContext c;
   c.create(render::RenderContext::SOFTWARE); 
-  auto plane = c.createAsset("../../assets/cube.dae");
+  auto plane = c.createAsset("../../assets/TIE.dae");
+  auto plane_2 = c.createAsset("../../assets/plane.dae");
+  auto plane_3 = c.createAsset("../../assets/cube.dae");
   bool running = true;
   
 

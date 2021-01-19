@@ -22,7 +22,7 @@ void DebugUIHandler::drawUI(){
     } 
     ImGui::EndTabItem();
   }
-  
+
   if(ImGui::BeginTabItem("Scene")){
     ImGui::EndTabItem();
   }
