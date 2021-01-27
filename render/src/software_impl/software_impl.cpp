@@ -41,6 +41,9 @@ render::software::SoftwareRenderer::SoftwareRenderer(const render::window::param
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForOpenGL(m_window.window(), m_window.context());
     ImGui_ImplOpenGL2_Init();
+    
+    render::shader::flat_color::flat_color colorShader;
+    colorShader.compile();
 }
 
 static int count = 0;

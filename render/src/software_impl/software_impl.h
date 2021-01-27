@@ -6,6 +6,7 @@
 #include <asset_import/asset.h>
 #include <collections/ring_buffer.h>
 #include "debug_ui_handler.h"
+#include <shaders/flat_color.h>
 
 namespace render{
 namespace software{ 
@@ -37,6 +38,7 @@ private:
   std::vector<render::asset::SceneAsset*> m_assets;
   std::vector<cgeom::transform::Transform> m_transforms;
   std::vector<::render::RenderContext::UiDrawHandler> m_uiHandlers;
+  
   std::unique_ptr<DebugUIHandler> m_debugUI;
   collections::ring_buffer::RingBuffer<collections::ring_buffer::ArrayWrapper<float,128>> m_frameRate;
 };

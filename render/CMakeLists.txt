@@ -4,6 +4,7 @@ find_package(OpenGL REQUIRED)
 find_package(Curses REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(GLUT REQUIRED)
+find_package(GLEW REQUIRED)
 
 set(LIB_SRC
   src/render.cpp 

@@ -30,6 +30,7 @@ public:
     m_renderer  = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
     m_surface   = SDL_GetWindowSurface(m_window);    
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    glewInit();
   }
 
   void clear(){

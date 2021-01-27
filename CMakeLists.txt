@@ -9,6 +9,7 @@ set(COMPILE_FLAGS "-std=c++17" "-fno-exceptions" "-Wall" "-O3" "-fno-omit-frame-
 else()
 set(COMPILE_FLAGS "-std=c++17" "-fno-exceptions" "-Wall" "-Werror=return-type" )
 endif()
+
 set(COMPILE_FLAGS "-std=c++17" "-fno-exceptions" "-Wall" "-Werror=return-type" )
 if(BUILD_TESTS)
     enable_testing()
