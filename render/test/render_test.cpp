@@ -13,12 +13,7 @@ int main(){
   auto plane_3 = c.createAsset("../../assets/cube.dae");
   bool running = true;
   
-
-  c.addUiHandler([&](){
-    //draw console for LUA
-  });
-
-  c.addInputListener([&](uint32_t key){
+  c.input()->addInputListener([&](uint32_t key){
     debug::print::print_debug("Pressed Key ", key);
     if(key == 'w'){
       plane.transform().translate(0,0,1);
@@ -38,7 +33,7 @@ int main(){
   });
 
 
-  c.addEventListener([&](render::IInputManager::event e){
+  c.input()->addEventListener([&](render::IInputManager::event e){
     if( e == render::IInputManager::Quit){
       running = false;
     }

@@ -13,7 +13,6 @@ set(LIB_SRC
   src/ncurses_impl/rasterizer.cpp
   src/ncurses_impl/asset.cpp
   src/software_impl/software_impl.cpp
-  src/software_impl/debug_ui_handler.cpp
   src/asset_import/import.cpp
   src/asset_import/texture.cpp
   src/asset_import/asset.cpp

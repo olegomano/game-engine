@@ -9,6 +9,7 @@
 
 
 namespace render{
+
 namespace primitive{
 enum Value{
   Triangle,
@@ -80,7 +81,7 @@ public:
     m_handlers.push_back(handler);
   }
 
-  void addEventHandler(const EventHandler handler){
+  void addEventListener(const EventHandler& handler){
     m_eventHandler.push_back(handler);
   }
 protected:
@@ -101,9 +102,13 @@ protected:
 };
 
 class IRenderImpl;
+namespace window{
+  class IWindow;
+}
+
+
 class RenderContext{
 public:
-  typedef std::function<void()> UiDrawHandler;
   enum Type{
     TEXT,
     TEXT_RAY,
@@ -115,17 +120,17 @@ public:
   void create(Type t);
   void createPrimitive(primitive::Value v);
   IAsset createAsset(const std::string& path);
-  
-  void render();
-  void addUiHandler(const UiDrawHandler& handler);
-  void addInputListener(const IInputManager::InputHandler& handler);
-  void addEventListener(const IInputManager::EventHandler& handler);
-  
 
+  void render();
+  window::IWindow* window();
+  IInputManager* input();
   ~RenderContext();
 private:
+
+  void drawAssetInspectorUI();
   std::unique_ptr<IRenderImpl> m_impl;
   std::unique_ptr<IInputManager> m_input;
+  std::unique_ptr<window::IWindow> m_window;
   asset::Manager m_assetManager;
 
   uint32_t m_assetHandle = 0;

@@ -5,12 +5,22 @@ DO NOT EDIT
 
 **/
 #pragma once
+#include <vector>
 #include <GL/glew.h>
 #include <GL/glut.h>
 #include <iostream>
 namespace render{
 namespace shader{
 namespace {shader_name}{
+
+#define CheckGLError(){\
+  while (true){\
+    const GLenum err = glGetError();\
+    if (GL_NO_ERROR == err)\
+      break;\
+    std::cout << __func__ << " line: "<< __LINE__ << " GL Error: " << GetGLErrorStr(err) << std::endl;\
+  }\
+}\
 
 {vertex_shader} 
 {fragment_shader} 
@@ -27,49 +37,78 @@ public:
     }
     
     glAttachShader( m_program, vertexHandle ); 
+    CheckGLError();
     glAttachShader( m_program, fragmentHandle ); 
+    CheckGLError();
     glLinkProgram(m_program);
+    CheckGLError();
     
     GLint status = GL_FALSE;
     GLint maxLength = 0;
 	  glGetShaderiv(m_program, GL_INFO_LOG_LENGTH, &maxLength);
+    CheckGLError();
 	  std::vector<GLchar> errorLog(maxLength);
 
     glGetProgramiv(m_program, GL_LINK_STATUS, &status ); 
+    CheckGLError();
     if( GL_FALSE == status ) {
       std::cerr << "Failed to link shader program!" << std::endl;
       GLint logLen; 
       glGetProgramiv(m_program, GL_INFO_LOG_LENGTH, &logLen); 
+      CheckGLError();
       if( logLen > 0 ) { 
         std::string(logLen, ' ');
         GLsizei written;
         glGetProgramInfoLog(m_program, logLen, &written, &errorLog[0]); 
+        CheckGLError();
         std::cerr << "Program log: " << std::endl << &errorLog;
       } 
     }
+    enable();
     bind();
+    disable();
+  }
+  
+  void enable(){
+    glUseProgram(m_program);
+    CheckGLError();
+    {enable_vertex_array}
+    CheckGLError();
   }
 
-
+  void disable(){
+    glUseProgram(0);
+    CheckGLError();
+    {disable_vertex_array}
+    CheckGLError();
+  }
+  
   {uniform_accessors};
   {attribute_accessors};
 private:
   
   GLuint compileShader(const char* const shader, GLuint shaderType){
     GLuint vertShader = glCreateShader( shaderType ); 
+    CheckGLError();
     glShaderSource( vertShader, 1, &shader, NULL ); 
+    CheckGLError();
     glCompileShader( vertShader );
+    CheckGLError();
     
     GLint result;
     GLint maxLength = 0;
 	  glGetShaderiv(vertShader, GL_INFO_LOG_LENGTH, &maxLength);
+    CheckGLError();
 	  std::vector<GLchar> errorLog(maxLength);
+    CheckGLError();
 
     glGetShaderiv( vertShader, GL_COMPILE_STATUS, &result ); 
+    CheckGLError();
     if( GL_FALSE == result ) { 
       std::cerr << "Vertex shader compilation failed!" << std::endl;
       GLint logLen; 
       glGetShaderiv(vertShader, GL_INFO_LOG_LENGTH, &logLen); 
+      CheckGLError();
       if( logLen > 0 ) { 
         std::string log(logLen, ' '); 
         GLsizei written; 
@@ -83,6 +122,22 @@ private:
   void bind(){
     {bind_body}
   }
+
+  const char * GetGLErrorStr(GLenum err){
+    switch (err)
+    {
+    case GL_NO_ERROR:          return "No error";
+    case GL_INVALID_ENUM:      return "Invalid enum";
+    case GL_INVALID_VALUE:     return "Invalid value";
+    case GL_INVALID_OPERATION: return "Invalid operation";
+    case GL_STACK_OVERFLOW:    return "Stack overflow";
+    case GL_STACK_UNDERFLOW:   return "Stack underflow";
+    case GL_OUT_OF_MEMORY:     return "Out of memory";
+    default:                   return "Unknown error";
+    }
+  }
+
+
   {members}
   GLuint m_program;
 };

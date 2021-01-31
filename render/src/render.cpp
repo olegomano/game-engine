@@ -1,12 +1,14 @@
-#include <render/render.h>
+#include <window.h>
+#include <imgui.h>
 #include <render_impl.h>
 #include <gl_impl/gl_impl.h>
+#include <ui_helpers.h>
 #include <ncurses_impl/ncurses_impl.h>
 #include <software_impl/software_impl.h>
 #include <asset_import/asset.h>
-#include <window.h>
 #include <ostream>
 #include <iostream>
+#include <render/render.h>
 
 render::RenderContext::RenderContext() = default;
 render::RenderContext::~RenderContext() = default;
@@ -28,8 +30,13 @@ void render::RenderContext::create(render::RenderContext::Type t){
     case SOFTWARE:
       {
       render::window::params params = {1024,1024,"SoftwareRenderer"};
-      m_impl = std::make_unique<software::SoftwareRenderer>(params);
-      m_input = std::make_unique<window::SDLInputManager>();
+      m_window  = std::make_unique<window::GLES2Window>(params);
+      m_impl    = std::make_unique<software::SoftwareRenderer>();
+      m_input   = std::make_unique<window::SDLInputManager>();
+      
+      m_window->addRenderer(std::bind(&software::SoftwareRenderer::render,(software::SoftwareRenderer*)m_impl.get()));
+      m_window->addUiTab(std::bind(&render::RenderContext::drawAssetInspectorUI,this));
+
       }
       break;
     default:
@@ -43,10 +50,21 @@ void render::RenderContext::createPrimitive(primitive::Value v){
 
 }
 
+void render::RenderContext::drawAssetInspectorUI(){
+  ImGui::BeginTabItem("Assets");
+  for(const auto& [path,asset] : m_assetManager.assets()){
+    if(ImGui::TreeNode(asset->path().c_str())){
+      render::ui<std::decay<decltype(asset)>::type>::draw(asset);
+      ImGui::TreePop();
+    }
+  } 
+  ImGui::EndTabItem();
+}
+
 ::render::IAsset render::RenderContext::createAsset(const std::string& v){
   using namespace render::asset;
   std::cout << "RenderContext::createAsset " << v << std::endl; 
-  SceneAsset* asset = m_assetManager.load<SceneAsset>(v);
+  SceneAsset* asset = m_assetManager.load(v);
   if(asset == nullptr){
     std::cout << "RenderContext::createAsset failed to create" << v << std::endl; 
   }else{
@@ -56,20 +74,16 @@ void render::RenderContext::createPrimitive(primitive::Value v){
   return {};
 }
 
-void render::RenderContext::addInputListener(const IInputManager::InputHandler& handler){
-  m_input->addInputListener(handler);
+render::window::IWindow* render::RenderContext::window(){
+  return m_window.get();
 }
 
-void render::RenderContext::addEventListener(const IInputManager::EventHandler& handler){
-  m_input->addEventHandler(handler);
-}
-
-void render::RenderContext::addUiHandler(const render::RenderContext::UiDrawHandler& handler){
-  m_impl->addUiHandler(handler);
+render::IInputManager* render::RenderContext::input(){
+  return m_input.get();
 }
 
 
 void render::RenderContext::render(){
-  m_impl->render();
+  m_window->render();
   m_input->pollInput();
 }

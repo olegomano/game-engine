@@ -1,19 +1,16 @@
 #pragma once
 #include <memory>
-
+#include <unordered_map>
 namespace render{
 namespace asset{
 
+class SceneAsset;
 class Manager{
 public:
-  template<typename T,typename... Args>
-  T* load(Args&&... args){
-    T* t = new T(std::forward<Args>(args)...);    
-    return t;
-  }
+  SceneAsset* load(const std::string& path);
+  const auto& assets(){return m_assets;}
 private:
-
-
+  std::unordered_map<std::string,SceneAsset*> m_assets;
 };
 
 

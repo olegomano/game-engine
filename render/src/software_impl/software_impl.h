@@ -5,8 +5,8 @@
 #include <window_impl.h>
 #include <asset_import/asset.h>
 #include <collections/ring_buffer.h>
-#include "debug_ui_handler.h"
 #include <shaders/flat_color.h>
+#include <gl_utils/vbo.h>
 
 namespace render{
 namespace software{ 
@@ -27,23 +27,17 @@ private:
 class SoftwareRenderer : public IRenderImpl{ 
 public:
   friend Asset;
-  friend DebugUIHandler;
-  SoftwareRenderer(const ::render::window::params& params);
-  void render() override;
-  void addUiHandler(const ::render::RenderContext::UiDrawHandler& handler) override;
-  void onRawInputEvent(SDL_Event& event); 
+  SoftwareRenderer();
+  void render();
   IAsset addAsset(asset::SceneAsset& asset);
 private:
-  render::window::GLES2Window m_window;
   std::vector<render::asset::SceneAsset*> m_assets;
-  std::vector<cgeom::transform::Transform> m_transforms;
-  std::vector<::render::RenderContext::UiDrawHandler> m_uiHandlers;
-  
-  std::unique_ptr<DebugUIHandler> m_debugUI;
+  std::vector<cgeom::transform::Transform> m_transforms; 
   collections::ring_buffer::RingBuffer<collections::ring_buffer::ArrayWrapper<float,128>> m_frameRate;
+
+  render::shader::flat_color::flat_color m_colorShader;
+  render::gl::VBO m_triangleVBO; 
 };
 
 }
-
-;
 }

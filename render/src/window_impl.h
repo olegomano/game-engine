@@ -1,6 +1,9 @@
 #pragma once
 #include "window.h"
+#include <imgui.h>
 #include <SDL2/SDL.h>
+#include <backends/imgui_impl_sdl.h>
+#include <backends/imgui_impl_opengl2.h>
 #include <GL/glew.h>
 #include <GL/glut.h>
 
@@ -31,25 +34,58 @@ public:
     m_surface   = SDL_GetWindowSurface(m_window);    
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     glewInit();
+
+   
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsClassic();
+    // Setup Platform/Renderer backends
+    ImGui_ImplSDL2_InitForOpenGL(m_window, m_glContext);
+    ImGui_ImplOpenGL2_Init();
+  }
+
+  void render() override{
+    clear();
+    for(auto& r : m_renderers){
+      r();
+    }
+    drawUI();
+    SDL_GL_SwapWindow(m_window);
   }
 
   void clear(){
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
   }
+  
+  void drawUI(){
+    ImGui_ImplOpenGL2_NewFrame();
+    ImGui_ImplSDL2_NewFrame(m_window);
+    ImGui::NewFrame();
+    
+    ImGui::Begin("  ");
+    ImGui::BeginTabBar("TabBar",0); 
+    for(auto& handler : m_uiTabs){
+      handler();
+    }
+    ImGui::EndTabBar();
+    ImGui::End();    
 
-  void swapBuffers(){
-    SDL_GL_SwapWindow(m_window);
+    for(auto& window : m_uiWindows){
+      ImGui::Begin("Window");
+      window();
+      ImGui::End();
+    }
+
+    ImGui::Render();
+    ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
   }
 
-  SDL_Window* window(){
-    return m_window;
-  }
-
-  SDL_GLContext context(){
-    return m_glContext;
-  }
- 
 private:
   SDL_Window*   m_window;
   SDL_Renderer* m_renderer;
