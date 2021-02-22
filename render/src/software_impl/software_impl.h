@@ -14,9 +14,9 @@ namespace software{
 class SoftwareRenderer;
 class DebugUIHandler;
 
-class Asset : public IAssetFunctions{
+class SceneItemImpl : public ::render::ISceneItemFunctions{
 public:
-  Asset(uint32_t index, SoftwareRenderer* owner);
+  SceneItemImpl(uint32_t index, SoftwareRenderer* owner);
   cgeom::transform::Transform& transform() override;
   const cgeom::transform::Transform& transform() const override;
 private:
@@ -24,15 +24,21 @@ private:
   SoftwareRenderer* m_owner = nullptr;
 };
 
+class CameraImpl : public Camera{
+  
+};
+
 class SoftwareRenderer : public IRenderImpl{ 
 public:
-  friend Asset;
+  friend SceneItemImpl;
   SoftwareRenderer();
-  void render();
-  IAsset addAsset(asset::SceneAsset& asset);
+  void render() override;
+  void drawSceneInspectorUI();
+  ::render::SceneItem addMesh(render::MeshInstance& mesh) override;
+  ::render::Camera addCamera() override;
 private:
-  std::vector<render::asset::SceneAsset*> m_assets;
   std::vector<cgeom::transform::Transform> m_transforms; 
+  std::vector<render::gl::VBO> m_models;
   collections::ring_buffer::RingBuffer<collections::ring_buffer::ArrayWrapper<float,128>> m_frameRate;
 
   render::shader::flat_color::flat_color m_colorShader;

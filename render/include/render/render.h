@@ -5,6 +5,7 @@
 #include <functional>
 #include <vector>
 #include <cgeom/transform.h>
+#include <collections/sbo_vtable.h>
 #include "import.h"
 
 
@@ -19,53 +20,19 @@ enum Value{
 }
 
 
-class IAssetFunctions{
+class ISceneItemFunctions{
 public:
   virtual cgeom::transform::Transform& transform() = 0;
   virtual const cgeom::transform::Transform& transform() const = 0;
-  virtual ~IAssetFunctions(){};
+  virtual ~ISceneItemFunctions(){};
+};
+
+struct ICameraFunctions{
+  virtual cgeom::transform::Transform& transform() = 0;
+  virtual ~ICameraFunctions(){} 
 };
 
 
-/**
- *  Represents an asset inside the rendering pipeline
- *  that has a position and attributes
- *  
- */
-class IAsset{
-public:
-  template<typename T>
-  void create(T&& obj){
-    static_assert(sizeof(T) < 32,"Object too large");
-    m_null = false;
-    T* lhs = (T*)m_impl;
-    new(lhs) T(obj);
-  }
-
-  cgeom::transform::Transform& transform(){
-    IAssetFunctions* f = (IAssetFunctions*)m_impl;
-    return f->transform();
-  }
-
-  const cgeom::transform::Transform& transform() const{
-    IAssetFunctions* f = (IAssetFunctions*)m_impl;
-    return f->transform(); 
-  }
-
-  bool operator()(){
-    return !m_null;
-  }
-
-  ~IAsset(){
-    if(!m_null){
-      IAssetFunctions* ptr = (IAssetFunctions*)(m_impl);
-      ptr->~IAssetFunctions();
-    }
-  }
-private:
-  uint8_t m_impl[32];
-  bool    m_null = true;
-};
 
 class IInputManager{
 public:
@@ -106,6 +73,8 @@ namespace window{
   class IWindow;
 }
 
+typedef collections::sbo_vtable::Vtable<ISceneItemFunctions,64> SceneItem;
+typedef collections::sbo_vtable::Vtable<ISceneItemFunctions,64> Camera;
 
 class RenderContext{
 public:
@@ -119,7 +88,8 @@ public:
   RenderContext();
   void create(Type t);
   void createPrimitive(primitive::Value v);
-  IAsset createAsset(const std::string& path);
+  SceneItem loadAsset(const std::string& path);
+  Camera createCamera();
 
   void render();
   window::IWindow* window();

@@ -37,8 +37,7 @@ public:
   }
 
   collections::scene_graph::Scene<const Mesh*> scene(){
-    collections::scene_graph::Scene<const Mesh*> scene = m_scene;
-    return scene;
+    return m_scene;
   }
 
   const Mesh* findMesh(const std::string& name) const {

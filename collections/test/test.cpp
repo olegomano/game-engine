@@ -3,9 +3,12 @@
 #include <collections/stable_vector.h>
 #include <collections/scene_graph.h>
 #include <collections/ring_buffer.h>
+#include <collections/sbo_vtable.h>
+#include <collections/sync_que.h>
 #include <glm/gtx/string_cast.hpp>
 #include <iostream>
-
+#include <thread>
+#include <unordered_map>
 
 TEST(ring_buffer,iterate){
   collections::ring_buffer::RingBuffer<collections::ring_buffer::ArrayWrapper<float,32>> rbuffer;
@@ -94,3 +97,100 @@ TEST(scene_graph, update){
   }  
   graph.update();
 }
+
+TEST(scene_graph, copy_ctr){
+  collections::scene_graph::Scene<int> scene;
+  scene.createNode(1);
+  scene.createNode(2);
+  scene.createNode(3);
+  auto parent = scene.createNode(4);
+  int value = 5;
+  for(int i = 0; i < 100; i++){
+    parent = scene.createNode(value++,parent);
+    scene.createNode(value++,parent);
+  }
+
+
+  collections::scene_graph::Scene<int> copy(scene);
+  int count = 0;
+
+  ASSERT_EQ(scene.nodes().size(), copy.nodes().size());
+  for(const collections::scene_graph::Node<int>& node: scene.nodes()){
+    if(node.hasPayload()){
+      ASSERT_EQ(count,node.data());
+    }
+    ++count;
+  }
+}
+
+
+
+TEST(sbo_vtable, create){
+  struct t{
+    virtual void call() = 0;
+    virtual ~t(){}
+  };
+
+  struct impl : public t{  
+    bool* ptr;
+    void call() override {
+      *ptr = true;
+    }
+  };
+  
+  bool isCalled = false;
+  impl i;
+  i.ptr = &isCalled;
+
+  collections::sbo_vtable::Vtable<t, 128> interface(i);
+  interface->call();
+  ASSERT_EQ(isCalled,true);
+}
+
+TEST(free_list, sp_sc){
+  typedef collections::sync_que::FreeList<int,256> List;
+  
+  List list;
+  std::vector<uint16_t> nodes;
+
+  for(int i = 0; i < 256; i++){
+    uint16_t handle = list.pop_front();
+    ASSERT_NE(handle,List::NULL_INDEX);
+    ASSERT_EQ(handle,i);
+    nodes.push_back(handle);
+  }
+  uint16_t fail = list.pop_front();
+  ASSERT_EQ(fail,List::NULL_INDEX);
+  fail = list.pop_front(); 
+  ASSERT_EQ(fail,List::NULL_INDEX);
+
+  std::function<void()> producer = [&](){
+    for(int i = 0; i < nodes.size(); i++){
+      uint16_t node = nodes[i];
+      list[node] = i;
+      list.push_back(node); 
+    }
+  };
+
+  std::thread thread(producer);
+  
+
+  int32_t lastInt = 0;
+  while(lastInt < 256){
+    uint16_t handle = list.pop_front();
+    if(handle != List::NULL_INDEX){
+      ASSERT_EQ(list[handle], lastInt);
+      lastInt++;
+    }
+  }
+  thread.join();
+}
+
+TEST(fixed_mpmc,sp_sc){
+  collections::sync_que::FixedMpMc<int,256> queue;
+  for(int i = 0; i < queue.capacity(); i++){
+    ASSERT_EQ(true, queue.push_back(i));
+  } 
+  ASSERT_EQ(false,queue.push_back(0));
+}
+

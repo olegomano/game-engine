@@ -29,21 +29,19 @@ public:
 
   NCursesRender();
   void render() override;
-  ::render::IAsset addAsset(::render::asset::SceneAsset& asset) override;
+  ::render::SceneItem addMesh(MeshInstance& asset) override;
+  ::render::Camera addCamera() override {return {};}
 
   void displayScene(std::ostream& out);
 
   ~NCursesRender();
-private:
-  void addMesh(::render::asset::Mesh* m);
-
 private:
   uint32_t m_count = 0;
   SceneGraph m_scene;
   raytrace::RayTracer m_tracer = raytrace::RayTracer(220,64);
 };
 
-class Asset : public ::render::IAssetFunctions{
+class Asset : public ::render::ISceneItemFunctions{
 public:
   Asset(const Asset& other);
   Asset(typename NCursesRender::SceneGraph& graph, collections::scene_graph::node_ref node);

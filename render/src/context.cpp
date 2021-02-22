@@ -14,6 +14,7 @@ render::RenderContext::RenderContext() = default;
 render::RenderContext::~RenderContext() = default;
 
 void render::RenderContext::create(render::RenderContext::Type t){
+  
   switch(t){
     case GL_3:
       {
@@ -36,7 +37,7 @@ void render::RenderContext::create(render::RenderContext::Type t){
       
       m_window->addRenderer(std::bind(&software::SoftwareRenderer::render,(software::SoftwareRenderer*)m_impl.get()));
       m_window->addUiTab(std::bind(&render::RenderContext::drawAssetInspectorUI,this));
-
+      m_window->addUiTab(std::bind(&software::SoftwareRenderer::drawSceneInspectorUI,(software::SoftwareRenderer*)m_impl.get()));
       }
       break;
     default:
@@ -51,17 +52,15 @@ void render::RenderContext::createPrimitive(primitive::Value v){
 }
 
 void render::RenderContext::drawAssetInspectorUI(){
-  ImGui::BeginTabItem("Assets");
   for(const auto& [path,asset] : m_assetManager.assets()){
     if(ImGui::TreeNode(asset->path().c_str())){
       render::ui<std::decay<decltype(asset)>::type>::draw(asset);
       ImGui::TreePop();
     }
   } 
-  ImGui::EndTabItem();
 }
 
-::render::IAsset render::RenderContext::createAsset(const std::string& v){
+render::SceneItem render::RenderContext::loadAsset(const std::string& v){
   using namespace render::asset;
   std::cout << "RenderContext::createAsset " << v << std::endl; 
   SceneAsset* asset = m_assetManager.load(v);
@@ -69,8 +68,14 @@ void render::RenderContext::drawAssetInspectorUI(){
     std::cout << "RenderContext::createAsset failed to create" << v << std::endl; 
   }else{
     //std::cout << "RenderContext::createAsset " <<  std::endl << *asset << std::endl; 
-    return m_impl->addAsset(*asset);
+    MeshInstance instance = asset->scene();
+    return m_impl->addMesh(instance);
   }
+  return {};
+}
+
+render::Camera render::RenderContext::createCamera(){
+  
   return {};
 }
 

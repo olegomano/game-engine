@@ -28,7 +28,11 @@ public:
 
 protected:
   std::vector<UiTab> m_uiTabs;
+  std::vector<std::string> m_uiTabNames;
+
   std::vector<UiWindow> m_uiWindows;
+  std::vector<std::string> m_uiWindowNames;
+  
   std::vector<RenderFunction> m_renderers;
 };
 

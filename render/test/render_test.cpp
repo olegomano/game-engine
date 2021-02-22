@@ -8,27 +8,28 @@
 int main(){
   render::RenderContext c;
   c.create(render::RenderContext::SOFTWARE); 
-  auto plane = c.createAsset("../../assets/TIE.dae");
-  auto plane_2 = c.createAsset("../../assets/plane.dae");
-  auto plane_3 = c.createAsset("../../assets/cube.dae");
+  auto plane = c.loadAsset("../../assets/TIE.dae");
+  //auto plane_2 = c.createAsset("../../assets/plane.dae");
+  //auto plane = c.createAsset("../../assets/cube.dae");
   bool running = true;
   
-  c.input()->addInputListener([&](uint32_t key){
+  c.input()->addInputListener([&](uint32_t key_int){
+    char key = (char)key_int;
     debug::print::print_debug("Pressed Key ", key);
-    if(key == 'w'){
-      plane.transform().translate(0,0,1);
-    }else if(key == 's'){
-      plane.transform().translate(0,0,-1);
+    if(key == 'W'){
+      plane->transform().translate(0.1,0,0);
+    }else if(key == 'S'){
+      plane->transform().translate(-0.1,0,0);
     }
-    if(key == 'a'){
-      plane.transform().rotate(0.05f,glm::vec3(-1,0,0));
-    }else if(key == 'd'){ 
-      plane.transform().rotate(0.05f,glm::vec3(1,0,0));
+    if(key == 'A'){
+      plane->transform().rotate(0.05f,glm::vec3(-1,0,0));
+    }else if(key == 'D'){ 
+      plane->transform().rotate(0.05f,glm::vec3(1,0,0));
     }
-    else if(key == 'q'){
-      plane.transform().rotate(0.05f,glm::vec3(0,1,0));
-    }else if(key == 'e'){
-      plane.transform().rotate(-0.05f,glm::vec3(0,1,0));
+    else if(key == 'Q'){
+      plane->transform().rotate(0.05f,glm::vec3(0,1,0));
+    }else if(key == 'E'){
+      plane->transform().rotate(-0.05f,glm::vec3(0,1,0));
     }
   });
 

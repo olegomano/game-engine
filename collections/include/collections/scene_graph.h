@@ -1,5 +1,6 @@
 #pragma once
 #include <optional>
+#include <vector>
 #include <glm/glm.hpp>
 #include <cgeom/transform.h>
 #include "stable_vector.h"
@@ -109,6 +110,33 @@ public:
   Scene(){
     Node<T> root = Node<T>(nullptr);
     m_nodes.push_back(std::move(root));
+  }
+  
+  Scene(const Scene<T>& other){
+    Node<T> root = Node<T>(nullptr);
+    m_nodes.push_back(std::move(root));
+    
+    std::vector<const Node<T>*> other_node_parent;
+    std::vector<node_ref> created_parent_ref;
+    
+    other_node_parent.push_back(&other.m_nodes[0]);
+    created_parent_ref.push_back(Root_Ref);
+
+    while(other_node_parent.size() > 0){
+      const Node<T>* const parent_other = other_node_parent.back();
+      node_ref parent_self = created_parent_ref.back();
+
+      other_node_parent.pop_back(); 
+      created_parent_ref.pop_back();
+
+      for(int i = 0; i < parent_other->children().size(); i++){
+        const Node<T>* const child = parent_other->children()[i];        
+        other_node_parent.push_back(child);
+
+        node_ref created_child = createNode(child->data(),parent_self);
+        created_parent_ref.push_back(created_child);
+      }
+    }
   }
 
   void update(){

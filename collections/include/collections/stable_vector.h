@@ -95,6 +95,12 @@ public:
     return m_allNodes[nodeIndex]->data[nodeOffset];
   }
 
+  const T& operator[](uint32_t indx) const {
+    uint32_t nodeIndex = indx / NodeType::MaximumSize;
+    uint32_t nodeOffset = indx % NodeType::MaximumSize;
+    return m_allNodes[nodeIndex]->data[nodeOffset];
+  }
+
   T* at(uint32_t indx){
     uint32_t nodeIndex = indx / NodeType::MaximumSize;
     uint32_t nodeOffset = indx % NodeType::MaximumSize;

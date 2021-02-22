@@ -9,7 +9,7 @@ TEST(gl_render, create){
 TEST(asset_import, load){
   render::RenderContext c;
   c.create(render::RenderContext::GL_3);
-  c.createAsset("../../assets/cube.dae");  
+  c.loadAsset("../../assets/cube.dae");  
 }
 
 

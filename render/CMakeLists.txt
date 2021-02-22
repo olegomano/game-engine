@@ -7,7 +7,7 @@ find_package(GLUT REQUIRED)
 find_package(GLEW REQUIRED)
 
 set(LIB_SRC
-  src/render.cpp 
+  src/context.cpp 
   src/input_handler_impl.cpp
   src/ncurses_impl/ncurses_impl.cpp 
   src/ncurses_impl/rasterizer.cpp

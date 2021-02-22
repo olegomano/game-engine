@@ -70,8 +70,13 @@ public:
     
     ImGui::Begin("  ");
     ImGui::BeginTabBar("TabBar",0); 
+    int count = 0;
     for(auto& handler : m_uiTabs){
-      handler();
+      std::string tabName = std::to_string(count++);
+      if(ImGui::BeginTabItem(tabName.c_str())){
+        handler();
+        ImGui::EndTabItem();
+      }
     }
     ImGui::EndTabBar();
     ImGui::End();    

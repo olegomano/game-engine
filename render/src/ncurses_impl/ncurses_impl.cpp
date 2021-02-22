@@ -104,13 +104,12 @@ void NCursesRender::displayScene(std::ostream& out){
   },0);
 }
 
-::render::IAsset NCursesRender::addAsset(::render::asset::SceneAsset& asset){
-  auto scene = asset.scene();
+::render::SceneItem NCursesRender::addMesh(MeshInstance& asset){
+  auto scene = asset;
   collections::scene_graph::node_ref ref = m_scene.append(scene);  
   displayScene(debug::print::stream); 
-  
-  ::render::IAsset result;
-  result.create(Asset(m_scene,ref));
+   
+  ::render::SceneItem result(Asset(m_scene,ref));
   return result;
 }
 
