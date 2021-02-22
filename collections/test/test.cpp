@@ -187,10 +187,83 @@ TEST(free_list, sp_sc){
 }
 
 TEST(fixed_mpmc,sp_sc){
-  collections::sync_que::FixedMpMc<int,256> queue;
+  collections::sync_que::FixedMpMc<int,1024> queue;
   for(int i = 0; i < queue.capacity(); i++){
     ASSERT_EQ(true, queue.push_back(i));
   } 
   ASSERT_EQ(false,queue.push_back(0));
+  for(int i = 0; i < queue.capacity(); i++){
+     int value;
+     ASSERT_EQ(true, queue.pop_front(value));
+     ASSERT_EQ(i, value);
+  }
+
+  
+   
+  std::function<void()> producer = [&](){
+    for(int i = 0; i < queue.capacity(); i++){
+      ASSERT_EQ(true, queue.push_back(i*i));
+    }    
+  };
+  std::thread thread(producer);
+  
+  int count = 0;
+  while(count < queue.capacity()){
+    int value;
+    if(queue.pop_front(value)){
+      ASSERT_EQ(count*count,value);
+      ++count;
+    }
+  }
+  
+  thread.join();
 }
 
+
+TEST(fixed_mpmc,mp_sc){
+  struct record{
+    int threadId;
+    int value;
+  };
+
+  std::unordered_map<int,int> threadResults;
+  collections::sync_que::FixedMpMc<record,1024> que;
+  std::atomic_int threadId =  {0};
+  constexpr int threadCount = 4;
+  constexpr int maxValue = 256*32;
+
+  std::function<void()> producer = [&](){
+    const int id = threadId.fetch_add(1);
+    for(int i = 0; i < maxValue; i++){
+      record r;
+      r.threadId = id;
+      r.value = i;
+      while(!que.push_back(r)){}
+      usleep(rand() % 2048);
+    }
+  };
+  
+
+  for(int i = 0; i < threadCount; i++){
+    threadResults[i] = -1;
+    std::thread t(producer);
+    t.detach();
+  
+  }
+
+  int doneCount = threadCount;
+  while(doneCount > 0){
+    record value;
+    if(que.pop_front(value)){
+      int lastWritten = threadResults[value.threadId];
+      ASSERT_EQ(lastWritten + 1, value.value);
+      threadResults[value.threadId] = value.value;
+      if(value.value == maxValue - 1){
+        doneCount--;
+      }
+    }
+    usleep(rand() % 256);
+  }
+
+
+}
