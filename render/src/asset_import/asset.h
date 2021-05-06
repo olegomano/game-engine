@@ -36,7 +36,7 @@ public:
     handleNode(scene->mRootNode,scene,collections::scene_graph::Scene<Mesh>::Root_Ref);
   }
 
-  collections::scene_graph::Scene<const Mesh*> scene(){
+  collections::scene_graph::Scene<const Mesh*> instance(){
     return m_scene;
   }
 
@@ -78,7 +78,7 @@ private:
       aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];  
       Mesh m = handleMesh(mesh,scene);
       m_meshes.push_back(std::move(m));
-      auto meshNode = m_scene.createNode( &(m_meshes[m_meshes.size() - 1]),currentNode);
+      auto meshNode = m_scene.createNode( m_meshes.tail(),currentNode);
     }
 
     for(int i = 0; i < node->mNumChildren; i++){

@@ -1,0 +1,5 @@
+if(EXISTS "/home/oleg/Documents/dev/engine-2/collections/stable_vector[1]_tests.cmake")
+  include("/home/oleg/Documents/dev/engine-2/collections/stable_vector[1]_tests.cmake")
+else()
+  add_test(stable_vector_NOT_BUILT stable_vector_NOT_BUILT)
+endif()

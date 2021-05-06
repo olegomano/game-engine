@@ -3,6 +3,8 @@ project(Galacoli)
 
 option(BUILD_TESTS "Build Tests" ON)
 option(OPTIMIZATIONS "Are optimizations enabled" OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 
 if(OPTIMIZATIONS)
 set(COMPILE_FLAGS "-std=c++17" "-fno-exceptions" "-Wall" "-O3" "-fno-omit-frame-pointer" "-flto" "-fno-rtti" "-Werror=return-type")
@@ -10,7 +12,8 @@ else()
 set(COMPILE_FLAGS "-std=c++17" "-fno-exceptions" "-Wall" "-Werror=return-type" )
 endif()
 
-set(COMPILE_FLAGS "-std=c++17" "-fno-exceptions" "-Wall" "-Werror=return-type" )
+set(COMPILE_FLAGS "-std=c++17" "-fno-exceptions" "-Wall" "-O3" "-fno-omit-frame-pointer" "-flto" "-fno-rtti" "-Werror=return-type")
+
 if(BUILD_TESTS)
     enable_testing()
     include(GoogleTest)
@@ -41,13 +44,32 @@ endmacro()
 #find_package(SDL2 REQUIRED)
 #find_package(GLEW REQUIRED)
 
+macro(package_add_bench)
+  set(options NOP)
+  set(oneValueArgs NAME)
+  set(multiValueArgs SRC LIBS INCLUDE FLAGS)
+  cmake_parse_arguments(PACKAGE_ADD_BENCH "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+
+  add_executable(${PACKAGE_ADD_BENCH_NAME} ${PACKAGE_ADD_BENCH_SRC})
+  target_include_directories(${PACKAGE_ADD_BENCH_NAME} PRIVATE
+    ${PACKAGE_ADD_BENCH_INCLUDE})
+
+  target_link_libraries(${PACKAGE_ADD_BENCH_NAME} benchmark::benchmark
+    ${PACKAGE_ADD_BENCH_LIBS})
+
+  target_compile_options(${PACKAGE_ADD_BENCH_NAME} PRIVATE ${PACKAGE_ADD_BENCH_FLAGS})
+
+endmacro()
 
 set(SAIL_INCLUDE_DIRS extern/sail/src)
 set(STB_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/extern/stb)
 add_subdirectory("extern/googletest")
+add_subdirectory("extern/gbench")
 add_subdirectory("extern/assimp")
+add_subdirectory("extern/lua")
 add_subdirectory("extern/glm")
 add_subdirectory("extern/imgui")
+add_subdirectory(lua)
 add_subdirectory(cgeom)
 add_subdirectory(collections)
 add_subdirectory(render)

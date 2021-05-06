@@ -8,7 +8,6 @@ find_package(GLEW REQUIRED)
 
 set(LIB_SRC
   src/context.cpp 
-  src/input_handler_impl.cpp
   src/ncurses_impl/ncurses_impl.cpp 
   src/ncurses_impl/rasterizer.cpp
   src/ncurses_impl/asset.cpp
@@ -44,6 +43,7 @@ set(LINKED_LIBRARIES
   cgeom
   collections
   imgui
+  lua_context
 )
 
 add_library(librender STATIC 
@@ -54,6 +54,7 @@ target_include_directories(librender PRIVATE ${INCLUDE_PRIVATE})
 target_include_directories(librender INTERFACE ${INCLUDE_INTERFACE})
 target_link_libraries(librender ${LINKED_LIBRARIES})
 target_compile_options(librender PRIVATE ${COMPILE_FLAGS})
+
 
 
 if(BUILD_TESTS)
@@ -67,7 +68,17 @@ if(BUILD_TESTS)
     )
   
   add_executable(render_test test/render_test.cpp)
-  target_link_libraries(render_test librender)
+ 
+  set_target_properties(render_test PROPERTIES
+            CXX_STANDARD 17
+            CXX_EXTENSIONS OFF
+            )
+  
+  set_target_properties(api_test PROPERTIES
+            CXX_STANDARD 17
+            CXX_EXTENSIONS OFF
+            )
+ target_link_libraries(render_test librender)
 endif()
 
 

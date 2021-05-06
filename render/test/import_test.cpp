@@ -11,7 +11,7 @@ TEST(asset_import, import_collada){
 TEST(asset_import, import_collada_texture){
   render::asset::SceneAsset asset("../../assets/cube.dae");
   std::cout << asset << std::endl;
-
+  /**
   const render::asset::Mesh* mesh = asset.findMesh("Cube-mesh");
   
   ASSERT_NE(mesh,nullptr);
@@ -20,16 +20,27 @@ TEST(asset_import, import_collada_texture){
   
   ASSERT_EQ(mesh->hasTexture<render::asset::Mesh::TextureLayer::diffuse>(),true);
   ASSERT_EQ(mesh->hasTexture<render::asset::Mesh::TextureLayer::normal>(),false);
+  **/  
 }
 
-
+TEST(asset_import, scene_graph_cycles){
+  render::asset::SceneAsset cube("../../assets/TIE.dae");
+  
+  for(const auto& node : cube.instance().nodes()){
+    std::cout << "Node: " << node.ref().index << std::endl;  
+    for(const auto& child : node.children()){
+      std::cout << "  " << child->ref().index << "," <<std::endl;
+    }
+  }
+}
+/**
 TEST(asset_import, scene_graph_append){
   render::asset::SceneAsset cube("../../assets/cube.dae");
   render::asset::SceneAsset plane("../../assets/plane.dae");
 
   collections::scene_graph::Scene<const render::asset::Mesh*> scene;
-  collections::scene_graph::Scene<const render::asset::Mesh*> cubeScene = cube.scene();
-  collections::scene_graph::Scene<const render::asset::Mesh*> planeScene = plane.scene();
+  collections::scene_graph::Scene<const render::asset::Mesh*> cubeScene = cube.instance();
+  collections::scene_graph::Scene<const render::asset::Mesh*> planeScene = plane.instance();
 
   scene.append(cubeScene);
   scene.append(cubeScene);
@@ -44,7 +55,7 @@ TEST(asset_import, scene_graph_append){
 
 TEST(asset_import, scene_graph_asset){
   render::asset::SceneAsset asset("../../assets/plane.dae");
-  auto scene = asset.scene();
+  auto scene = asset.instance();
   scene.update();
   for(auto& globalPosition : scene.globals()){
     const render::asset::Mesh* m = std::get<const render::asset::Mesh* const>(globalPosition);
@@ -54,7 +65,7 @@ TEST(asset_import, scene_graph_asset){
 
 TEST(asset_import,ray_trace){
   render::asset::SceneAsset asset("../../assets/plane.dae");
-  auto scene = asset.scene();
+  auto scene = asset.instance();
   scene.update();
   render::ncurses::raytrace::RayTracer tracer(16,16);
   tracer.render(scene.globals());
@@ -67,6 +78,6 @@ TEST(asset_import,ray_trace){
 }
 
 TEST(asset_import, scene_graph_print){
-
-
 }
+
+**/

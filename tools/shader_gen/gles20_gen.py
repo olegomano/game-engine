@@ -1,6 +1,7 @@
 import os
 import argparse 
 import codecs 
+from datetime import datetime
 
 class Uniform:
     def __init__(self,t,n):
@@ -38,7 +39,7 @@ class GLES20Generator:
             
         print(self._uniforms)
         print(self._attributes)
-        
+        template = template.replace("{timestamp}",str(datetime.now()))        
         template = template.replace("{vertex_shader}",self.gen_c_array("vertex_shader",vertex ) )
         template = template.replace("{fragment_shader}",self.gen_c_array("fragment_shader",fragment ) )       
         template = template.replace("{shader_name}",self._name)

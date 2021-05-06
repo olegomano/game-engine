@@ -6,24 +6,6 @@
 
 using namespace render::ncurses;
 
-InputManager::InputManager(){
-  keypad(stdscr,true);
-  timeout(0);
-}
-
-void InputManager::handleKeyboard(uint32_t t){
-  for(const auto& listener : m_handlers){
-    listener(t);
-  }
-}
-
-void InputManager::pollInput(){
-  uint32_t c = getch();
-  if(c != -1){
-    handleKeyboard(c);
-  }
-}
-
 NCursesRender::NCursesRender(){
   initscr();
   cbreak();
@@ -69,7 +51,7 @@ void NCursesRender::render(){
 }
 
 void NCursesRender::displayScene(std::ostream& out){
-  m_scene.traverse([&](const auto& node,int depth) {
+  m_scene.traverse<int>([&](collections::scene_graph::Node<const ::render::asset::Mesh*>& node,int depth)-> int {
     for(int i = 0; i < depth; i++){
       out << " ";
     }
@@ -104,10 +86,10 @@ void NCursesRender::displayScene(std::ostream& out){
   },0);
 }
 
-::render::SceneItem NCursesRender::addMesh(MeshInstance& asset){
+::render::SceneItem NCursesRender::addMesh(MeshInstance& asset, const std::string& uri){
   auto scene = asset;
   collections::scene_graph::node_ref ref = m_scene.append(scene);  
-  displayScene(debug::print::stream); 
+  //displayScene(debug::print::stream); 
    
   ::render::SceneItem result(Asset(m_scene,ref));
   return result;

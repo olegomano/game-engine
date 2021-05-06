@@ -35,5 +35,12 @@ std::ostream& render::asset::operator<<(std::ostream& out, const render::asset::
   }
   return out;
 }
+/**
+std::ostream& render::asset::operator<<(std::ostream& out, const collections::scene_graph::Scene<render::asset::Mesh*>& graph){
+  gaph.traverse([&](auto& node, int tmp){
+     
+  },0);
+}
+**/
 
 

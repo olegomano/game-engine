@@ -19,3 +19,6 @@
 [submodule "extern/imgui/imgui"]
 	path = extern/imgui/imgui
 	url = git@github.com:ocornut/imgui.git
+[submodule "extern/gbench"]
+	path = extern/gbench
+	url = https://github.com/google/benchmark.git

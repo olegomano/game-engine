@@ -46,6 +46,7 @@ public:
   struct Node{
     T*       data;
     uint16_t handle;
+    char __padding__[64];
   };
   
   FreeList(){
@@ -139,6 +140,9 @@ class FixedMpMc{
     WRITE
   };
 public:
+  typedef _T type;
+  static constexpr uint32_t size = _SIZE;
+
   FixedMpMc(){
     for(int i = 0; i < _SIZE; i++){
       uint16_t handle = m_queue.pop_front();
@@ -148,7 +152,7 @@ public:
   }
   
   template<typename T>
-  bool push_back(const T& t, uint64_t timeout_ms = 1000){
+  bool push_back(const T& t, uint64_t timeout_ms = 0){
     FreeNode* node = m_freeList.remove();
     while( node == nullptr && waitFor<READ>(timeout_ms) != TIMEOUT){
       node = m_freeList.remove();
@@ -162,9 +166,9 @@ public:
     return true;
   }
 
-  bool pop_front(_T& out, uint64_t timeout_ms = 1000){
+  bool pop_front(_T& out, uint64_t timeout_ms = 0){
     uint16_t handle = m_queue.pop_front();
-    while( handle == m_queue.NULL_INDEX && waitFor<WRITE>(timeout_ms) ){
+    while( handle == m_queue.NULL_INDEX && waitFor<WRITE>(timeout_ms) != TIMEOUT ){
       handle = m_queue.pop_front();
     }
     if(handle == m_queue.NULL_INDEX){
@@ -210,7 +214,6 @@ private:
       (std::chrono::system_clock::now() - start).count();
     
     if(timeoutStatus == std::cv_status::timeout){
-      std::cout << "Timeout" << std::endl;
       return -1;
     }
     timeout -= time;
@@ -222,7 +225,8 @@ private:
     _T data;
     uint16_t handle;
     std::atomic<FreeNode*> next = {nullptr};
-  
+    char __padding__[64];
+    
     void insert(FreeNode* node){
       FreeNode* oldNext;
       node->next.store(nullptr);

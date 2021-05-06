@@ -1,0 +1,76 @@
+#pragma once
+#include "public/lua/lua_context.h""
+#include <stdio.h>
+#include <string.h>
+#include <string>  
+extern "C" {
+  #include <lua.h>
+  #include <lauxlib.h>
+  #include <lualib.h>
+}
+
+namespace lua{
+
+class LuaContextImpl{
+  static constexpr char* CONTEXT_NAME = "_lua_context_impl";
+public:
+  LuaContextImpl(){
+    m_print_handler = [](const std::string& line){
+      std::cout << line << std::endl;
+    };
+    m_lua_state = luaL_newstate();   /* opens Lua */
+    luaL_openlibs(m_lua_state);
+    lua_pushlightuserdata(m_lua_state, this); 
+  }    
+
+  
+  /**
+   * Executes the given string
+   * returns true on success, false on failure
+   * if fails fills error with error
+   */
+  bool executeString(const std::string& s, std::string& error_string){
+    int error = luaL_loadstring(m_lua_state, s.c_str());
+    error = lua_pcall(m_lua_state, 0, LUA_MULTRET, 0);
+    if (error) {
+      error_string = std::string( lua_tostring(m_lua_state, -1) );
+      lua_pop(m_lua_state, 1);  /* pop error message from the stack */
+      return false;
+    }
+    return true;
+  }
+  
+  void setPrintHandler(const LuaPrint& handler){
+    m_print_handler = handler;
+  }
+
+  lua_State* lua(){
+    return m_lua_state;
+  }
+
+  ~LuaContextImpl(){}
+private:
+  lua_State* m_lua_state;
+  LuaPrint   m_print_handler;
+
+  
+  
+  static int l_print_handler(lua_State* lua){
+    int nargs = lua_gettop(lua);
+    for (int i=1; i <= nargs; i++) {
+      if (lua_isstring(lua, i)) {
+        std::string line;
+        lua::Item<std::string>::read(lua,line);
+        
+      }
+      else {
+        
+      }
+    }
+    return 0;
+  }
+};
+
+
+
+}

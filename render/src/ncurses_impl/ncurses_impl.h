@@ -13,13 +13,6 @@ namespace ncurses{
 
 class Asset;
 
-class InputManager : public IInputManager{
-public:
-  InputManager();
-  void handleKeyboard(uint32_t key);
-  void pollInput();
-};
-
 class NCursesRender : public IRenderImpl{
 public:
   friend Asset;
@@ -29,7 +22,7 @@ public:
 
   NCursesRender();
   void render() override;
-  ::render::SceneItem addMesh(MeshInstance& asset) override;
+  ::render::SceneItem addMesh(MeshInstance& asset, const std::string& uri) override;
   ::render::Camera addCamera() override {return {};}
 
   void displayScene(std::ostream& out);
@@ -46,8 +39,6 @@ public:
   Asset(const Asset& other);
   Asset(typename NCursesRender::SceneGraph& graph, collections::scene_graph::node_ref node);
   ~Asset(); 
-  const cgeom::transform::Transform& transform() const override;
-  cgeom::transform::Transform& transform() override;
 private:
   collections::scene_graph::node_ref m_node;
   typename NCursesRender::SceneGraph& m_graph;

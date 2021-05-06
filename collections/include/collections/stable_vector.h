@@ -63,7 +63,6 @@ public:
 
   };
 
-
   StableVector(){
     NodeType* n = new NodeType();
     m_allNodes[0]=n;
@@ -113,6 +112,14 @@ public:
     return &m_allNodes[nodeIndex]->data[nodeOffset];
   }
 
+  const T* tail() const {
+    return at(m_nodeCount - 1);
+  }
+
+  T* tail(){
+    return at(m_nodeCount - 1);
+  }
+
   size_t size() const {
     return m_nodeCount;
   }
@@ -127,7 +134,7 @@ public:
 
 private:
   std::array<NodeType*,128> m_allNodes = {nullptr};
-  size_t                    m_nodeCount = 0;
+  size_t                    m_nodeCount = 0; //size, not node count
 };
 
 

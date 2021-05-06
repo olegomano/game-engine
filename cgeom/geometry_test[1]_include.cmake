@@ -1,0 +1,5 @@
+if(EXISTS "/home/oleg/Documents/dev/engine-2/cgeom/geometry_test[1]_tests.cmake")
+  include("/home/oleg/Documents/dev/engine-2/cgeom/geometry_test[1]_tests.cmake")
+else()
+  add_test(geometry_test_NOT_BUILT geometry_test_NOT_BUILT)
+endif()

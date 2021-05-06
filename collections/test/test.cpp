@@ -5,6 +5,7 @@
 #include <collections/ring_buffer.h>
 #include <collections/sbo_vtable.h>
 #include <collections/sync_que.h>
+#include <collections/simple_que.h>
 #include <glm/gtx/string_cast.hpp>
 #include <iostream>
 #include <thread>
@@ -123,7 +124,33 @@ TEST(scene_graph, copy_ctr){
   }
 }
 
+TEST(scene_graph, transform){
+  struct s{
+    int i;
+  };
 
+  collections::scene_graph::Scene<int> scene;
+  collections::scene_graph::Scene<s> dst;
+
+  for(int i = 0; i < 100; i++){
+    scene.createNode(i);
+  }
+
+  scene.morph_into<s>(dst,[&](const int& node) {
+    s result;
+    result.i = node;
+    return result;
+  });
+  
+  int count = 0;
+  for(const auto& node : dst.nodes()){
+    if(node.hasPayload()){
+      std::cout << node.data().i << std::endl;
+      //ASSERT_EQ(count, node.data().i);
+      ++count;
+    }
+  }
+}
 
 TEST(sbo_vtable, create){
   struct t{
@@ -186,8 +213,10 @@ TEST(free_list, sp_sc){
   thread.join();
 }
 
-TEST(fixed_mpmc,sp_sc){
-  collections::sync_que::FixedMpMc<int,1024> queue;
+
+template<template<class,uint32_t> typename T>
+void sp_sc(){
+  T<int,1024> queue;
   for(int i = 0; i < queue.capacity(); i++){
     ASSERT_EQ(true, queue.push_back(i));
   } 
@@ -220,14 +249,15 @@ TEST(fixed_mpmc,sp_sc){
 }
 
 
-TEST(fixed_mpmc,mp_sc){
+template<template<class,uint32_t> typename T>
+void mp_sc(){
   struct record{
     int threadId;
     int value;
   };
 
+  T<record,1024> que;
   std::unordered_map<int,int> threadResults;
-  collections::sync_que::FixedMpMc<record,1024> que;
   std::atomic_int threadId =  {0};
   constexpr int threadCount = 4;
   constexpr int maxValue = 256*32;
@@ -264,6 +294,23 @@ TEST(fixed_mpmc,mp_sc){
     }
     usleep(rand() % 256);
   }
-
-
 }
+
+TEST(fixed_mpmc,sp_sc){
+  sp_sc<collections::sync_que::FixedMpMc>();
+}
+
+TEST(fixed_mpmc,mp_sc){
+  mp_sc<collections::sync_que::FixedMpMc>();
+}
+
+TEST(simple_que,sp_sc){
+  sp_sc<collections::sync_que::SimpleQue>();
+}
+
+TEST(simple_que,mp_sc){
+  mp_sc<collections::sync_que::SimpleQue>();
+}
+
+
+

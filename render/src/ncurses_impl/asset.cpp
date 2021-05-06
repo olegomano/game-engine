@@ -12,14 +12,5 @@ Asset::Asset(typename NCursesRender::SceneGraph& graph,
 
 Asset::~Asset(){}
 
-const cgeom::transform::Transform& Asset::transform() const {
-  return m_graph[m_node].transform();
-}
-
-cgeom::transform::Transform& Asset::transform() {
-  return m_graph[m_node].transform();
-}
-
-
 }
 }

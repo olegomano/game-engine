@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(collections)
 
-set(LIB_SRC "src/src.cpp")
+set(LIB_SRC "src/debug_print.cpp")
 
 set(LIB_NAME collections)
 
@@ -36,3 +36,9 @@ if(BUILD_TESTS)
     FLAGS ${COMPILE_FLAGS}
   )  
 endif()
+
+package_add_bench(NAME sync_que_bench
+  SRC perf/sync_que.cpp
+  LIBS ${LIB_NAME}
+  FLAGS ${COMPILE_FLAGS}
+)

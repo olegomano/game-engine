@@ -17,7 +17,7 @@ public:
 
   bool allocateRaw(const void* data,size_t bytes){
     m_size = bytes;
-    debug::print::print_debug("Allocating VBO size ",bytes,"bytes");
+    debug::print::print_system("GlVbo","Allocating VBO size ", bytes , " bytes");
     CheckGLError();    
     glGenBuffers(1,&m_handle);
     glBindBuffer(GL_ARRAY_BUFFER, m_handle);
@@ -30,11 +30,11 @@ public:
     return true;
   }
 
-  void bind(){
+  void bind() const {
     glBindBuffer(GL_ARRAY_BUFFER, m_handle);
   }
 
-  void unbind(){
+  void unbind() const {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
   }
   

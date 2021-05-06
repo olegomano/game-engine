@@ -5,10 +5,6 @@
 namespace render{
 namespace window{
 
-typedef std::function<void()> UiTab;
-typedef std::function<void()> UiWindow;
-typedef std::function<void()> RenderFunction;
-
 struct params{
   uint32_t width;
   uint32_t height;
@@ -18,13 +14,30 @@ struct params{
 class IWindow{
 public:
   IWindow(const params& params){}
-  void addUiTab( UiTab tab){m_uiTabs.push_back(tab);}
-  void addUiWindow( UiWindow window){m_uiWindows.push_back(window);}
+  void addUiTab( const std::string& name, UiTab tab){
+    m_uiTabNames.push_back(name);
+    m_uiTabs.push_back(tab);
+  }
+  
+  void addUiWindow( const std::string& name, UiWindow window){
+    m_uiWindowNames.push_back(name);
+    m_uiWindows.push_back(window);
+  }
+
+  void addInputHandler(const InputHandler& h){
+    m_inputHanlers.push_back(h);
+  }
+
+  void addEventHandler(const EventHandler& h){
+    m_eventHandlers.push_back(h);
+  }
+
   void addRenderer( RenderFunction r){m_renderers.push_back(r);}
   virtual void render() = 0;
   ~IWindow(){}
   
   virtual void drawUI() = 0;
+  virtual void pollInput() = 0;
 
 protected:
   std::vector<UiTab> m_uiTabs;
@@ -34,12 +47,12 @@ protected:
   std::vector<std::string> m_uiWindowNames;
   
   std::vector<RenderFunction> m_renderers;
+  
+  std::vector<InputHandler> m_inputHanlers;
+  std::vector<EventHandler> m_eventHandlers;
+
 };
 
-class SDLInputManager : public ::render::IInputManager {
-public:
-  void pollInput() override;
-};
 
-}
-}
+}}
+

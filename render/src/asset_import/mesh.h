@@ -216,12 +216,21 @@ public:
     },m_layers);
   }
 
+  template<typename VertexLayer::id T>
+  const float* layerVertexStart() const{
+    return (float*)(&layer<T>()[0][0][0]);
+  }
+  
   const std::string& name() const {
     return m_name;
   }
 
   const uint32_t faceCount() const {
     return m_faceCount;
+  }
+
+  const uint32_t vertexCount() const {
+    return m_faceCount * 3;
   }
 
 private:

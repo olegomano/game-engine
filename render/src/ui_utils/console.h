@@ -1,19 +1,44 @@
 #pragma once
+#include <collections/ring_buffer.h>
+#include <collections/sync_que.h>
+#include <collections/sync_que_utils.h>
+#include <collections/debug_print.h>
+#include <functional>
+
 
 namespace render{
 
-
-class Console{
+class Console{ 
 public:
-  bool poll(std::string& str);
-  void push_text(const std::string command);
-  bool push_command(const std::string command); 
-  const auto& text() {return m_buffer;}
-private:
-  std::string m_command =  "";
-  bool m_pendingCommand = false;
-  collection::ring_buffer::RingBuffer<collections::ring_buffer::ArrayWrapper<std::string,128>> m_buffer;
-};
+  typedef std::function<void(const std::string&)> Listener;
+  
+  void push_log(const std::string& command){
+  }
+  
+  void set_input_text(const std::string& command){
+    m_input_text = command;
+  } 
 
+  void execute_input_text(){
+    m_buffer.push_back(m_input_text);
+    m_input_text = "";
+  }
+
+  const std::string& input_text() const {
+    return m_input_text;
+  }
+  
+  const auto& text() {
+    collections::sync_que::drain_for(*debug::print::io::Debug_Buffer(),
+        [&](const std::string& string){
+          m_buffer.push_back(string);
+        }, 3);
+    return m_buffer;
+  }
+
+private:
+  std::string m_input_text = "Default Text"; 
+  collections::ring_buffer::RingBuffer<collections::ring_buffer::ArrayWrapper<std::string,32>> m_buffer;
+};
 
 }
